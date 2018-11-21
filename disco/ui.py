@@ -4,6 +4,7 @@ import cv2 as cv
 from PIL import Image
 import io
 from sys import exit as exit
+import time
 
 
 # sub-layout components
@@ -14,12 +15,12 @@ mainButtons = [
     [sg.FileBrowse('LOAD', key='loadProfileButton', size=(6,None))],
     [sg.Save('SAVE', key='saveProfileButton', size=(6,None))],
     [sg.Button('CALIB', key='openCalibrateButton', size=(6,None))],
-    [makeButton('SEND', 'downloadTrialButton')],
-    [makeButton('START', 'startTestButton')],
+    [makeButton('SEND', key='downloadTrialButton')],
+    [makeButton('START', key='startTestButton')],
 ]
 
 buttonsDuringRun = [
-    [makeButton('END','endTestButton'),]
+    [makeButton('END', key='endTestButton'),]
 ]
 
 profileSettings = {
@@ -87,12 +88,12 @@ window = sg.Window('Spider Disco 2.0',
                    icon='fav1.ico')
 window.Layout(layout)
 
-# window.Read()
 
 # ---===--- Event LOOP Read and display frames, operate the GUI --- #
 cap = cv.VideoCapture(0)
 
 while True:
+    time.sleep(0.25)
     button, values = window.ReadNonBlocking()
 
     ret, frame = cap.read()
@@ -117,3 +118,7 @@ while True:
     imgbytes2 = bio2.getvalue()  # this can be used by OpenCV hopefully
     window.FindElement('flirPreview').Update(data=imgbytes2)
 
+    # process button presses:
+    if button:
+        #sg.Popup(values['loadProfileButton'])
+        sg.Popup(values)
