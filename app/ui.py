@@ -93,8 +93,9 @@ window.Layout(layout)
 cap = cv.VideoCapture(0)
 
 while True:
-    time.sleep(0.25)
-    button, values = window.ReadNonBlocking()
+    button, values = window.ReadNonBlocking(timeout=250)
+    if button is None:
+        break
 
     ret, frame = cap.read()
 
@@ -119,6 +120,6 @@ while True:
     window.FindElement('flirPreview').Update(data=imgbytes2)
 
     # process button presses:
-    if button:
+    if button != sg.TIMEOUT_KEY:
         #sg.Popup(values['loadProfileButton'])
         sg.Popup(values)
