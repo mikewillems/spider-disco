@@ -79,11 +79,8 @@ layout = [
 # read window
 
 
-# global window settings
-#sg.SetOptions(icon='./disco_spider_28a_icon.ico',)
-
 # create the window and show it without the plot
-window = sg.Window('Spider Disco 2.0',
+window = sg.Window('Spider Disco 0.2',
                    location=(200,220),
                    icon='fav1.ico')
 window.Layout(layout)
