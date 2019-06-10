@@ -90,7 +90,7 @@ window.Layout(layout)
 cap = cv.VideoCapture(0)
 
 while True:
-    button, values = window.ReadNonBlocking(timeout=250)
+    button, values = window.Read(timeout=250)
     if button is None:
         break
 
