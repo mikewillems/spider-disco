@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html style="width:100vw; height:100vh;">
+<head>
+    <title>This place feels... *groovy*</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="fav1.ico">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0">
+
+</head>
+<body style="width:100vw; height:100vh; margin:0; font-family:'Roboto Mono', monospace;">
+
+    <div id="main-screen">
+        <div id="left-section" style="width:auto; height:100vh; background-color:red; display:inline-block;">
+
+            <div id="alert-message-board" style="display:fixed; position:absolute; z-index:100000; width:100%;">
+            </div>
+
+            <div id="video-container" style="max-width:75vw; max-height:90vh; position:relative;">
+                <img src="test-img.jpg" alt="camera not connected" style="max-width:75vw; max-height:90vh;"/>
+                <div id="camera-select-bar" style="position:absolute; bottom:2px; left:2px; display:flex; justify-content:center; width:30%; height:auto; color:white; font-family:'Roboto Mono', monospace;">
+                    <button id="visual-button" class="tab-select" style="color:white; text-transform:capitalize; border:2px solid white; background-color:rgba(0,0,0,0.5); width:50%; font-size:2.3vh; font-family:'Roboto Mono', monospace; padding: 1vh;">
+                    visual
+                    </button>
+                    <button id="thermal-button" class="tab-select" style="color:white; text-transform:capitalize; border:2px solid white; background-color:rgba(0,0,0,0.5); width:50%; font-size:2.3vh; font-family:'Roboto Mono', monospace; padding: 1vh;">
+                    thermal
+                    </button>
+                </div>    
+            </div>
+            <div id="status-area-container" style="display:flex; width:100%; height:10vh">
+                <div id="status-area" style="display:flex; justify-content:space-around; align-items:center; width:100%; height:10vh; padding-left:1em; padding-right:1em; background-color:black; color:white;">
+                    <span id="status-message-span">Disco in progress...</span>
+                    <span id="progress-bar-span"><progress value="25" max="100"></progress></span>
+                    <span id="elapsed-time-span"> 1:08 </span> 
+                    <span> / </span>
+                    <span id="trial-length-span">3:00</span>
+                </div>
+            </div>
+
+            
+        </div>
+        <div id="right-section">
+            
+        </div>
+    </div>
+
+    <div id="calibrate-screen">
+        
+    </div>
+
+    <div id="trial-screen">
+        
+    </div>
+
+    <div id="load-popup">
+        
+    </div>
+
+    <div id="save-popup">
+        
+    </div>
+
+    <script type="text/javascript">
+
+// FRONT-END FUNCTIONS
+
+        function markViewAsVisual(set){
+            var visualButton = document.getElementById('visual-button');
+            if(set) {
+                visualButton.style.color = "black";
+                visualButton.style.backgroundColor = "white";
+                visualButton.style.fontWeight = "bold";
+                markViewAsThermal(false);
+            }
+            else {
+                visualButton.style.color = "white";
+                visualButton.style.backgroundColor = "rgba(0,0,0,0.5)";
+                visualButton.style.fontWeight = "normal";
+            }
+        }
+        function markViewAsThermal(set){
+            var thermalButton = document.getElementById('thermal-button');
+            if(set) {
+                thermalButton.style.color = "black";
+                thermalButton.style.backgroundColor = "white";
+                thermalButton.style.fontWeight = "bold";
+                markViewAsVisual(false);
+            }
+            else {
+                thermalButton.style.color = "white";
+                thermalButton.style.backgroundColor = "rgba(0,0,0,0.5)";
+                thermalButton.style.fontWeight = "normal";
+            }
+        }
+        function clearContinuousAlerts() {
+            alerts = document.getElementById('alert-message-board');
+            while (alerts.firstChild) {
+               alerts.removeChild(alerts.firstChild);
+            }
+        }
+        function displayContinuousAlert(message, color) {
+            clearContinuousAlerts();
+            var messageDiv = document.createElement('div');
+            messageDiv.appendChild(document.createTextNode(message));
+            messageDiv.style = "position:absolute; top: 5vh; color:"+color+"; font-weight:bold; text-transform:capitalize; margin-left: 1em;";
+            messageDiv.setAttribute("id", "alert"+document.getElementsByClassName('continuous-alert').length);
+            messageDiv.setAttribute("class", "continuous-alert");
+            messageDiv.appendChild(document.createElement('br'));
+            document.getElementById('alert-message-board').appendChild(messageDiv);
+
+        }
+        function displayLaserArmedWarning(){
+            displayContinuousAlert('WARNING: laser armed!', 'yellow');
+        }
+        function displayLaserActiveWarning(){
+            displayContinuousAlert('DANGER: laser active!', 'red');
+        }
+        function setIndicator(index, isOn){
+            return;
+        }
+        function clearStatusArea(){
+            statusArea = document.getElementById('status-area');
+            while (statusArea.firstChild) {
+               statusArea.removeChild(statusArea.firstChild);
+            }
+        }
+        function getSpan(id, contentNode) {
+            var newSpan = document.createElement('span');
+            newSpan.setAttribute('id', id);
+            newSpan.appendChild(contentNode);
+            return newSpan;
+        }
+        function getTimeStamp(seconds) {
+            return "" + Math.floor(seconds / 60) + ":" + ("0" + seconds % 60).slice(-2); 
+        }
+        function showDiscoProgress(secElapsed, secTotal){
+            clearStatusArea();
+
+            var statusMessage = document.createTextNode("Disco in progress... ");
+
+            var progressBar = document.createElement('progress');
+            progressBar.setAttribute('id', 'progress-bar');
+            progressBar.setAttribute('value', secElapsed);
+            progressBar.setAttribute('max', secTotal);
+
+            var elapsedTimeDisplay = document.createTextNode(" " + getTimeStamp(secElapsed) + " / " + getTimeStamp(secTotal));
+
+            statusArea.appendChild(getSpan('progress-bar-span', statusMessage));
+            statusArea.appendChild(getSpan('progress-bar-span', progressBar));
+            statusArea.appendChild(getSpan('elapsed-time-display', elapsedTimeDisplay));
+        }
+        function hideProgressBar(){return;}
+        function showProgressTime(secElapsed, secTotal){return;}
+
+
+// HARDWARE INTERFACE FUNCTIONS
+    
+        function laserIsArmed() {
+            // Implement with feedback from DISARM signal
+        }
+
+// BACKEND INTERFACE FUNCTIONS
+
+        function setVisualView(){
+            markViewAsVisual(true);
+            // Implement so that cam image updates from visual
+            displayLaserArmedWarning();
+        }
+        document.getElementById('visual-button').addEventListener('click', setVisualView, true);
+        setVisualView(); // start page with visual view on
+
+        function setThermalView(){
+            markViewAsThermal(true);
+            // Implement so that cam image updates from thermal
+            clearContinuousAlerts();
+        }
+        document.getElementById('thermal-button').addEventListener('click', setThermalView, true);
+
+        function startTrial(){
+            if(laserIsArmed()) {
+            }
+            // displayStatus(...)
+        }
+
+        function endTrial(){
+        }
+
+
+
+    </script>
+
+</body>
+</html>
