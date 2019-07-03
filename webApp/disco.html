@@ -9,8 +9,8 @@
 </head>
 <body style="width:100vw; height:100vh; margin:0; font-family:'Roboto Mono', monospace;">
 
-    <div id="main-screen">
-        <div id="left-section" style="width:auto; height:100vh; background-color:red; display:inline-block;">
+    <div id="main-screen" style="display:flex; flex-direction:row;">
+        <div id="left-section" style="width:auto; height:100vh; display:inline-block;">
 
             <div id="alert-message-board" style="display:fixed; position:absolute; z-index:100000; width:100%;">
             </div>
@@ -38,8 +38,16 @@
 
             
         </div>
-        <div id="right-section">
-            
+        <div id="right-section" style="width:auto; height:100vh; display:flex; flex-direction:column; justify-content: space-between;">
+            <div>
+                target 1 info
+            </div>
+            <div>
+                target 2 info
+            </div>
+            <div>
+                more status
+            </div>
         </div>
     </div>
 
@@ -142,14 +150,19 @@
             progressBar.setAttribute('value', secElapsed);
             progressBar.setAttribute('max', secTotal);
 
-            var elapsedTimeDisplay = document.createTextNode(" " + getTimeStamp(secElapsed) + " / " + getTimeStamp(secTotal));
+            var elapsedTimeDisplay = document.createTextNode(getTimeStamp(secElapsed));
+            var statusSpacer = document.createTextNode(" / ");
+            var trialLengthDisplay = document.createTextNode(getTimeStamp(secTotal));
 
             statusArea.appendChild(getSpan('progress-bar-span', statusMessage));
             statusArea.appendChild(getSpan('progress-bar-span', progressBar));
             statusArea.appendChild(getSpan('elapsed-time-display', elapsedTimeDisplay));
+            statusArea.appendChild(getSpan('elapsed-time-display', statusSpacer));
+            statusArea.appendChild(getSpan('elapsed-time-display', trialLengthDisplay));
         }
-        function hideProgressBar(){return;}
-        function showProgressTime(secElapsed, secTotal){return;}
+        function setStatusAreaColor(color){
+            document.getElementById('status-area').style.backgroundColor=color;
+        }
 
 
 // HARDWARE INTERFACE FUNCTIONS
