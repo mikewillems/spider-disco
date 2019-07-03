@@ -28,25 +28,30 @@
             </div>
             <div id="status-area-container" style="display:flex; width:100%; height:10vh">
                 <div id="status-area" style="display:flex; justify-content:space-around; align-items:center; width:100%; height:10vh; padding-left:1em; padding-right:1em; background-color:black; color:white;">
-                    <span id="status-message-span">Disco in progress...</span>
-                    <span id="progress-bar-span"><progress value="25" max="100"></progress></span>
-                    <span id="elapsed-time-span"> 1:08 </span> 
-                    <span> / </span>
-                    <span id="trial-length-span">3:00</span>
                 </div>
             </div>
 
             
         </div>
-        <div id="right-section" style="width:auto; height:100vh; display:flex; flex-direction:column; justify-content: space-between;">
-            <div>
-                target 1 info
+        <div id="right-section" style="width:100%; padding-left:1em; padding-right:1em; height:100vh; display:flex; flex-direction:column; justify-content: space-between;">
+            <div id="target-A-info">
+                <h3 style="width:100%;text-align:center;">Target A</h3>
+                <div style="display:flex; flex-direction:row; justify-content:space-between;">
+                    <div>left</div>
+                    <div>right</div>
+                </div>
             </div>
-            <div>
-                target 2 info
+            <div id="target-B-info">
+                <h3 style="width:100%;text-align:center;">Target B</h3>
+                <div style="display:flex; flex-direction:row; justify-content:space-between;">
+                    <div>left</div>
+                    <div>right</div>
+                </div>
             </div>
-            <div>
-                more status
+            <div id="indicators-div" style="margin-bottom:1em; font-size:1.8vw;">
+                <div id="pc-connection-indicator" class="indicator-light" style="display:flex; flex-direction:row;"><div style="width:0.75em; height:0.75em; border:2px solid black; margin:2px; margin-right:.75em"></div><div>PC Connected</div></div>
+                <div id="enrem-indicator" class="indicator-light" style="display:flex; flex-direction:row;"><div style="width:0.75em; height:0.75em; border:2px solid black; margin:2px; margin-right:.75em"></div><div>Remote Enabled</div></div>
+                <div id="calibrated-indicator" class="indicator-light" style="display:flex; flex-direction:row;"><div style="width:0.75em; height:0.75em; border:2px solid black; margin:2px; margin-right:.75em"></div><div>System Calibrated</div></div>
             </div>
         </div>
     </div>
@@ -122,9 +127,6 @@
         function displayLaserActiveWarning(){
             displayContinuousAlert('DANGER: laser active!', 'red');
         }
-        function setIndicator(index, isOn){
-            return;
-        }
         function clearStatusArea(){
             statusArea = document.getElementById('status-area');
             while (statusArea.firstChild) {
@@ -163,6 +165,13 @@
         function setStatusAreaColor(color){
             document.getElementById('status-area').style.backgroundColor=color;
         }
+        function setIndicator(index, isOn){
+            if(isOn == undefined) {
+                var indicator=document.getElementsByClassName('indicator-light')[index].firstChild.style.backgroundColor = "transparent";    
+                return;
+            }
+            var indicator=document.getElementsByClassName('indicator-light')[index].firstChild.style.backgroundColor = isOn ? "green" : "red";
+        }
 
 
 // HARDWARE INTERFACE FUNCTIONS
@@ -171,12 +180,18 @@
             // Implement with feedback from DISARM signal
         }
 
-// BACKEND INTERFACE FUNCTIONS
+//********************************************************************
+// BACKEND INTERFACE FUNCTIONS ********* IMPLEMENT THIS!!!************
 
         function setVisualView(){
             markViewAsVisual(true);
             // Implement so that cam image updates from visual
-            displayLaserArmedWarning();
+
+            // REMOVE THIS! JUST TO SHOW FUNCTIONALITY DURING DEV!
+            clearContinuousAlerts();
+            clearStatusArea();
+            setIndicator(0);
+            setIndicator(1);
         }
         document.getElementById('visual-button').addEventListener('click', setVisualView, true);
         setVisualView(); // start page with visual view on
@@ -185,19 +200,14 @@
             markViewAsThermal(true);
             // Implement so that cam image updates from thermal
             clearContinuousAlerts();
+
+            // REMOVE THIS! JUST TO SHOW FUNCTIONALITY DURING DEV!
+            displayLaserArmedWarning();
+            showDiscoProgress(68, 180);
+            setIndicator(0,false);
+            setIndicator(1,true);
         }
         document.getElementById('thermal-button').addEventListener('click', setThermalView, true);
-
-        function startTrial(){
-            if(laserIsArmed()) {
-            }
-            // displayStatus(...)
-        }
-
-        function endTrial(){
-        }
-
-
 
     </script>
 
