@@ -34,24 +34,37 @@
             
         </div>
         <div id="right-section" style="width:100%; padding-left:1em; padding-right:1em; height:100vh; display:flex; flex-direction:column; justify-content: space-between;">
-            <div id="target-A-info">
-                <h3 style="width:100%;text-align:center;">Target A</h3>
-                <div style="display:flex; flex-direction:row; justify-content:space-between;">
-                    <div>left</div>
-                    <div>right</div>
-                </div>
+            <div id="target-F-info">
+                <h3 style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:100%; text-align:center; color:rgb(42,116,145); border:2px solid rgb(42,116,145);"><span>Target F</span><span>&#128393;</span></h3>
+                <table style="margin-bottom:0.75em;">
+                    <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Set: </span></span></td><td><span id="target-F-set-temp">32</span>&#8451;</td></tr>
+                    <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Temp: </span></td><td><span id="target-F-current-temp">28</span>&#8451;</td></tr>
+                    <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">(x,y): </span></td><td><span id="target-F-x-pos">48</span>mm,<span id="target-F-y-pos">121</span>mm</td></tr>
+                    <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Moved: </span></td><td><span id="target-F-distance-moved">24</span>mm</td></tr>
+                </table>
+                <!-- <div style="display:flex; flex-direction:row; justify-content:center;">
+                    <button>SELECT TARGET A</button>
+                </div> -->
             </div>
-            <div id="target-B-info">
-                <h3 style="width:100%;text-align:center;">Target B</h3>
-                <div style="display:flex; flex-direction:row; justify-content:space-between;">
-                    <div>left</div>
-                    <div>right</div>
-                </div>
+            <div id="target-M-info">
+                <h3 style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:100%; text-align:center; color:rgb(104,0,52); border:2px solid rgb(104,0,52);"><span>Target M</span><span>&#128393;</span></h3>
+                <table style="margin-bottom:0.75em;">
+                    <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Set: </span></span></td><td><span id="target-M-set-temp">32</span>&#8451;</td></tr>
+                    <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Temp: </span></td><td><span id="target-M-current-temp">28</span>&#8451;</td></tr>
+                    <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">(x,y): </span></td><td><span id="target-M-x-pos">48</span>mm,<span id="target-M-y-pos">121</span>mm</td></tr>
+                    <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Moved: </span></td><td><span id="target-M-distance-moved">24</span>mm</td></tr>
+                </table>
+                <!-- <div style="display:flex; flex-direction:row; justify-content:center;">
+                    <button>SELECT TARGET B</button>
+                </div> -->
             </div>
             <div id="indicators-div" style="margin-bottom:1em; font-size:1.8vw;">
                 <div id="pc-connection-indicator" class="indicator-light" style="display:flex; flex-direction:row;"><div style="width:0.75em; height:0.75em; border:2px solid black; margin:2px; margin-right:.75em"></div><div>PC Connected</div></div>
                 <div id="enrem-indicator" class="indicator-light" style="display:flex; flex-direction:row;"><div style="width:0.75em; height:0.75em; border:2px solid black; margin:2px; margin-right:.75em"></div><div>Remote Enabled</div></div>
                 <div id="calibrated-indicator" class="indicator-light" style="display:flex; flex-direction:row;"><div style="width:0.75em; height:0.75em; border:2px solid black; margin:2px; margin-right:.75em"></div><div>System Calibrated</div></div>
+            </div>
+            <div id="primary-action-button-container" style="width:100%; height:10vh; display:flex; flex-direction:column; justify-content:center;">
+                <button disabled id="primary-action-button" style="height:9vh; font-family:'Roboto Mono', monospace;"><span style="font-weight:bold; font-size:125%; height:10vh;">START TRIAL</span></button>
             </div>
         </div>
     </div>
@@ -162,16 +175,46 @@
             statusArea.appendChild(getSpan('elapsed-time-display', statusSpacer));
             statusArea.appendChild(getSpan('elapsed-time-display', trialLengthDisplay));
         }
+
+        // Pass in a dict to update data display for a particular target.
+        // If useLonghand is true, use the DOM IDs for keys, else use the JS shorthand:
+        function updateTargetDataDisplay(dataObj, useLonghand){
+            var dataIDs = {
+                "setF":"target-F-set-temp",
+                "tempF":"target-F-current-temp",
+                "xF":"target-F-x-pos",
+                "yF":"target-F-y-pos",
+                "movedF":"target-F-distance-moved",
+                "setM":"target-M-set-temp",
+                "tempM":"target-M-current-temp",
+                "xM":"target-M-x-pos",
+                "yM":"target-M-y-pos",
+                "movedM":"target-M-distance-moved",
+            };
+            for (var key in dataObj){
+                let targetId = useLonghand ? key : dataIDs[key];
+                let val = dataObj[key];
+                if(val) document.getElementById(targetId).innerHTML = val;
+            };
+        }
         function setStatusAreaColor(color){
             document.getElementById('status-area').style.backgroundColor=color;
         }
-        function setIndicator(index, isOn){
+        // isOn = true for green, isOn = false for red, isOn = undefined for transparent (reset)
+        function setIndicator(index, isOn){ 
             if(isOn == undefined) {
                 var indicator=document.getElementsByClassName('indicator-light')[index].firstChild.style.backgroundColor = "transparent";    
                 return;
             }
             var indicator=document.getElementsByClassName('indicator-light')[index].firstChild.style.backgroundColor = isOn ? "green" : "red";
         }
+        function enablePrimaryActionButton(){
+            document.getElementById("primary-action-button").removeAttribute("disabled");
+        }
+        function disablePrimaryActionButton(){
+            document.getElementById("primary-action-button").setAttribute("disabled", "disabled");
+        }
+
 
 
 // HARDWARE INTERFACE FUNCTIONS
