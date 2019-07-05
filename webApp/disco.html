@@ -12,16 +12,17 @@
     <div id="main-screen" style="display:flex; flex-direction:row; width:1280px; height:768px; max-width:100vw; max-height:100vh;">
         <div id="left-section" style="width:auto; display:inline-block;">
 
-            <div id="alert-message-board" style="display:fixed; position:absolute; z-index:100000; width:960px; max-width:75vw;">
+            <div id="alert-message-board" style="display:fixed; position:absolute; z-index:1000000; width:960px; max-width:75vw; background-color:rgba(0,0,0,.5);">
             </div>
 
-            <div id="video-container" style="width:960px; max-width:75vw; height:691px; max-height:90vh; position:relative;">
-                <img src="test-img.jpg" alt="camera not connected" style="width:960px; height:691px; max-width:75vw; max-height:90vh;"/>
+            <div id="video-container" style="width:960px; max-width:75vw; height:691px; max-height:90vh; position:relative; display:flex; flex-direction:row; align-items:center;">
+                <img id="visible-cam-output" src="test-img.jpg" alt="visible camera not connected" style="display:none;"/>
+                <img id="thermal-cam-output" src="test-img.jpg" alt="thermal camera not connected" style="display:none;">
                 <div id="camera-select-bar" style="position:absolute; bottom:2px; left:2px; display:flex; justify-content:center; width:30%; height:auto; color:white; font-family:'Roboto Mono', monospace;">
-                    <button id="visual-button" class="tab-select" style="color:white; text-transform:capitalize; border:2px solid white; background-color:rgba(0,0,0,0.5); width:50%; font-size:2.3vh; font-family:'Roboto Mono', monospace; padding: 1vh;">
+                    <button id="visual-button" class="tab-select cam-select-button" style="color:white; text-transform:capitalize; border:2px solid white; background-color:rgba(0,0,0,0.5); width:50%; font-size:2.3vh; font-family:'Roboto Mono', monospace; padding: 1vh;">
                     visual
                     </button>
-                    <button id="thermal-button" class="tab-select" style="color:white; text-transform:capitalize; border:2px solid white; background-color:rgba(0,0,0,0.5); width:50%; font-size:2.3vh; font-family:'Roboto Mono', monospace; padding: 1vh;">
+                    <button id="thermal-button" class="tab-select cam-select-button" style="color:white; text-transform:capitalize; border:2px solid white; background-color:rgba(0,0,0,0.5); width:50%; font-size:2.3vh; font-family:'Roboto Mono', monospace; padding: 1vh;">
                     thermal
                     </button>
                 </div>    
@@ -99,34 +100,61 @@
 
 // FRONT-END FUNCTIONS
 
-        function markViewAsVisual(set){
-            var visualButton = document.getElementById('visual-button');
-            if(set) {
-                visualButton.style.color = "black";
-                visualButton.style.backgroundColor = "white";
-                visualButton.style.fontWeight = "bold";
-                markViewAsThermal(false);
+        // Button 0 = Visual, Button 1 = Thermal
+        var cameraViewState = [true, true];
+        function updateCameraView(){
+            let showVisible = cameraViewState[0];
+            let showThermal = cameraViewState[1];
+            let visibleCamElement = document.getElementById('visible-cam-output');
+            let thermalCamElement = document.getElementById('thermal-cam-output');
+            let numActiveCamsViews = +showVisible + +showThermal;
+            if(numActiveCamsViews == 1) {
+                visibleCamElement.style.width = "100%";
+                visibleCamElement.style.height = "100%";
+                thermalCamElement.style.width = "100%";
+                thermalCamElement.style.height = "100%";
             }
-            else {
-                visualButton.style.color = "white";
-                visualButton.style.backgroundColor = "rgba(0,0,0,0.5)";
-                visualButton.style.fontWeight = "normal";
+            if(numActiveCamsViews == 2) {
+                visibleCamElement.style.width = "50%";
+                visibleCamElement.style.height = "50%";
+                thermalCamElement.style.width = "50%";
+                thermalCamElement.style.height = "50%";
             }
+            
+            if(showVisible) {visibleCamElement.style.display = "flex";}
+            else{visibleCamElement.style.display = "none";}
+
+            if(showThermal) {thermalCamElement.style.display = "flex";} 
+            else{thermalCamElement.style.display = "none";}
         }
-        function markViewAsThermal(set){
-            var thermalButton = document.getElementById('thermal-button');
-            if(set) {
-                thermalButton.style.color = "black";
-                thermalButton.style.backgroundColor = "white";
-                thermalButton.style.fontWeight = "bold";
-                markViewAsVisual(false);
+        function updateCameraButtonView(){
+            var camViewSelectButtons = document.getElementsByClassName('cam-select-button');
+            var camViewSelectButton;
+            for (var cameraViewStateIndex in cameraViewState){
+                camViewSelectButton = camViewSelectButtons[cameraViewStateIndex];
+                if(cameraViewState[cameraViewStateIndex]){
+                    camViewSelectButton.style.color = "black";
+                    camViewSelectButton.style.backgroundColor = "white";
+                    camViewSelectButton.style.fontWeight = "bold";
+                } else {
+                    camViewSelectButton.style.color = "white";
+                    camViewSelectButton.style.backgroundColor = "rgba(0,0,0,0.5)";
+                    camViewSelectButton.style.fontWeight = "normal";
+                }
             }
-            else {
-                thermalButton.style.color = "white";
-                thermalButton.style.backgroundColor = "rgba(0,0,0,0.5)";
-                thermalButton.style.fontWeight = "normal";
-            }
+
         }
+        function pushCameraViewButton(index){            
+            // If at least one camera is selected after toggling the view that was pressed, toggles that camera's visibility and update buttons:
+            if(+!cameraViewState[index] + +cameraViewState[+!index]){
+                cameraViewState[index] = !cameraViewState[index];
+                updateCameraView();
+                updateCameraButtonView();
+            }
+            // Otherwise, pressing the button again does nothing.
+        }
+        document.getElementById('visual-button').addEventListener('click', ()=>{pushCameraViewButton(0);}, true);
+        document.getElementById('thermal-button').addEventListener('click', ()=>{pushCameraViewButton(1);}, true);
         function clearPersistentAlerts() {
             alerts = document.getElementById('alert-message-board');
             while (alerts.firstChild) {
@@ -137,7 +165,7 @@
             clearPersistentAlerts();
             var messageDiv = document.createElement('div');
             messageDiv.appendChild(document.createTextNode(message));
-            messageDiv.style = "position:absolute; top: 5vh; color:"+color+"; font-weight:bold; text-transform:capitalize; margin-left: 1em; font-size:5vh;";
+            messageDiv.style = "position:absolute; top: 5vh; color:"+color+"; font-weight:bold; text-transform:capitalize; margin-left: 1em; font-size:5vh; background-color:rgba(0,0,0,0.5); padding-left:0.5em; padding-right:0.5em;";
             messageDiv.setAttribute("id", "alert"+document.getElementsByClassName('persistent-alert').length);
             messageDiv.setAttribute("class", "persistent-alert");
             messageDiv.appendChild(document.createElement('br'));
@@ -226,35 +254,6 @@
 
 
 
-// HARDWARE INTERFACE FUNCTIONS
-    
-        function laserIsArmed() {
-            // Implement with feedback from DISARM signal
-        }
-
-//********************************************************************
-// BACKEND INTERFACE FUNCTIONS ********* IMPLEMENT THIS!!!************
-
-        function setVisualView(){
-            markViewAsVisual(true);
-            // Implement so that cam image updates from visual
-
-            // REMOVE THIS! JUST TO SHOW FUNCTIONALITY DURING DEV!
-            testVisuals(false);
-        }
-        document.getElementById('visual-button').addEventListener('click', setVisualView, true);
-        setVisualView(); // start page with visual view on
-
-        function setThermalView(){
-            markViewAsThermal(true);
-            // Implement so that cam image updates from thermal
-            clearPersistentAlerts();
-
-            // REMOVE THIS! JUST TO SHOW FUNCTIONALITY DURING DEV!
-            testVisuals(true);
-        }
-        document.getElementById('thermal-button').addEventListener('click', setThermalView, true);
-
 
         function testVisuals(turnOn){
             if(turnOn) {
@@ -269,6 +268,30 @@
                 clearIndicator(1);
             }
         }
+
+
+// HARDWARE INTERFACE FUNCTIONS
+    
+        function laserIsArmed() {
+            // Implement with feedback from DISARM signal
+        }
+
+//********************************************************************
+// BACKEND INTERFACE FUNCTIONS ********* IMPLEMENT THIS!!!************
+
+        
+
+        function setThermalView(){
+            // Implement so that cam image updates from thermal
+            clearPersistentAlerts();
+
+            // REMOVE THIS! JUST TO SHOW FUNCTIONALITY DURING DEV!
+            testVisuals(true);
+        }
+        
+
+
+        
 
     </script>
 
