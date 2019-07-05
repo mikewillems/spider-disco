@@ -7,16 +7,16 @@
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0">
 
 </head>
-<body style="width:100vw; height:100vh; margin:0; font-family:'Roboto Mono', monospace;">
+<body style="display:flex; flex-direction:row; justify-content:center; align-items:center; width:100vw; height:100vh; margin:0; font-family:'Roboto Mono', monospace;">
 
-    <div id="main-screen" style="display:flex; flex-direction:row;">
-        <div id="left-section" style="width:auto; height:100vh; display:inline-block;">
+    <div id="main-screen" style="display:flex; flex-direction:row; width:1280px; height:768px; max-width:100vw; max-height:100vh;">
+        <div id="left-section" style="width:auto; display:inline-block;">
 
-            <div id="alert-message-board" style="display:fixed; position:absolute; z-index:100000; width:100%;">
+            <div id="alert-message-board" style="display:fixed; position:absolute; z-index:100000; width:960px; max-width:75vw;">
             </div>
 
-            <div id="video-container" style="max-width:75vw; max-height:90vh; position:relative;">
-                <img src="test-img.jpg" alt="camera not connected" style="max-width:75vw; max-height:90vh;"/>
+            <div id="video-container" style="width:960px; max-width:75vw; height:691px; max-height:90vh; position:relative;">
+                <img src="test-img.jpg" alt="camera not connected" style="width:960px; height:691px; max-width:75vw; max-height:90vh;"/>
                 <div id="camera-select-bar" style="position:absolute; bottom:2px; left:2px; display:flex; justify-content:center; width:30%; height:auto; color:white; font-family:'Roboto Mono', monospace;">
                     <button id="visual-button" class="tab-select" style="color:white; text-transform:capitalize; border:2px solid white; background-color:rgba(0,0,0,0.5); width:50%; font-size:2.3vh; font-family:'Roboto Mono', monospace; padding: 1vh;">
                     visual
@@ -33,38 +33,48 @@
 
             
         </div>
-        <div id="right-section" style="width:100%; padding-left:1em; padding-right:1em; height:100vh; display:flex; flex-direction:column; justify-content: space-between;">
-            <div id="target-F-info">
-                <h3 style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:100%; text-align:center; color:rgb(42,116,145); border:2px solid rgb(42,116,145);"><span>Target F</span><span>&#128393;</span></h3>
-                <table style="margin-bottom:0.75em;">
-                    <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Set: </span></span></td><td><span id="target-F-set-temp">32</span>&#8451;</td></tr>
-                    <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Temp: </span></td><td><span id="target-F-current-temp">28</span>&#8451;</td></tr>
-                    <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">(x,y): </span></td><td><span id="target-F-x-pos">48</span>mm,<span id="target-F-y-pos">121</span>mm</td></tr>
-                    <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Moved: </span></td><td><span id="target-F-distance-moved">24</span>mm</td></tr>
-                </table>
-                <!-- <div style="display:flex; flex-direction:row; justify-content:center;">
-                    <button>SELECT TARGET A</button>
-                </div> -->
+        <div id="right-section" style="width:100%; padding-left:1em; padding-right:1em; height:768px; max-height:100vh; display:flex; flex-direction:column; justify-content: space-between;">
+            <div id="control-div" style="margin:0; padding:0;">
+
+                <div id="completed-trials-view">
+                </div>
+
+                <div id="trial-setup-view">
+                </div>
+
+                <div id="calibration-view">
+                </div>
+
+                <div id="target-data-view" style="margin:0; padding:0;">
+                    <div id="target-F-info">
+                        <h3 style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:100%; text-align:center; color:rgb(42,116,145); border:2px solid rgb(42,116,145);"><span>Target F</span><span>&#128393;</span></h3>
+                        <table style="margin-bottom:0.75em;">
+                            <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Set: </span></span></td><td><span id="target-F-set-temp">--</span>&#8451;</td></tr>
+                            <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Temp: </span></td><td><span id="target-F-current-temp">--</span>&#8451;</td></tr>
+                            <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">(x,y): </span></td><td><span id="target-F-x-pos">--</span>mm,<span id="target-F-y-pos">--</span>mm</td></tr>
+                            <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Moved: </span></td><td><span id="target-F-distance-moved">--</span>mm</td></tr>
+                        </table>
+                    </div>
+                    <div id="target-M-info">
+                        <h3 style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:100%; text-align:center; color:rgb(104,0,52); border:2px solid rgb(104,0,52);"><span>Target M</span><span>&#128393;</span></h3>
+                        <table style="margin-bottom:0.75em;">
+                            <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Set: </span></span></td><td><span id="target-M-set-temp">--</span>&#8451;</td></tr>
+                            <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Temp: </span></td><td><span id="target-M-current-temp">--</span>&#8451;</td></tr>
+                            <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">(x,y): </span></td><td><span id="target-M-x-pos">--</span>mm,<span id="target-M-y-pos">--</span>mm</td></tr>
+                            <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Moved: </span></td><td><span id="target-M-distance-moved">--</span>mm</td></tr>
+                        </table>
+                    </div>
+                </div>
+
             </div>
-            <div id="target-M-info">
-                <h3 style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:100%; text-align:center; color:rgb(104,0,52); border:2px solid rgb(104,0,52);"><span>Target M</span><span>&#128393;</span></h3>
-                <table style="margin-bottom:0.75em;">
-                    <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Set: </span></span></td><td><span id="target-M-set-temp">32</span>&#8451;</td></tr>
-                    <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Temp: </span></td><td><span id="target-M-current-temp">28</span>&#8451;</td></tr>
-                    <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">(x,y): </span></td><td><span id="target-M-x-pos">48</span>mm,<span id="target-M-y-pos">121</span>mm</td></tr>
-                    <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Moved: </span></td><td><span id="target-M-distance-moved">24</span>mm</td></tr>
-                </table>
-                <!-- <div style="display:flex; flex-direction:row; justify-content:center;">
-                    <button>SELECT TARGET B</button>
-                </div> -->
-            </div>
-            <div id="indicators-div" style="margin-bottom:1em; font-size:1.8vw;">
+            <div id="indicators-div" style="margin-bottom:1em; font-size:2.5vh;">
                 <div id="pc-connection-indicator" class="indicator-light" style="display:flex; flex-direction:row;"><div style="width:0.75em; height:0.75em; border:2px solid black; margin:2px; margin-right:.75em"></div><div>PC Connected</div></div>
                 <div id="enrem-indicator" class="indicator-light" style="display:flex; flex-direction:row;"><div style="width:0.75em; height:0.75em; border:2px solid black; margin:2px; margin-right:.75em"></div><div>Remote Enabled</div></div>
                 <div id="calibrated-indicator" class="indicator-light" style="display:flex; flex-direction:row;"><div style="width:0.75em; height:0.75em; border:2px solid black; margin:2px; margin-right:.75em"></div><div>System Calibrated</div></div>
             </div>
-            <div id="primary-action-button-container" style="width:100%; height:10vh; display:flex; flex-direction:column; justify-content:center;">
-                <button disabled id="primary-action-button" style="height:9vh; font-family:'Roboto Mono', monospace;"><span style="font-weight:bold; font-size:125%; height:10vh;">START TRIAL</span></button>
+            <div id="action-button-container" style="width:100%; height:10vh; display:flex; flex-direction:row; justify-content:space-around; align-items:center;">
+                <button disabled id="secondary-action-button" style="font-size: 2.5vh; width:60px; max-width:7vh; height:9vh; font-family:'Roboto Mono', monospace;"><span id="secondary-action-button-span" style="font-weight:bold;"><</span></button>
+                <button disabled id="primary-action-button" style="font-size: 2.5vh; display:flex; flex-direction:row; justify-content:center; align-items:center; width:225px; max-width:25vh; height:9vh; font-family:'Roboto Mono', monospace;"><span id="primary-action-button-span" style="font-weight:bold;">START TRIAL</span><span id="right-arrow-span" style="font-weight:bold;">&nbsp;></span></button>
             </div>
         </div>
     </div>
@@ -117,28 +127,28 @@
                 thermalButton.style.fontWeight = "normal";
             }
         }
-        function clearContinuousAlerts() {
+        function clearPersistentAlerts() {
             alerts = document.getElementById('alert-message-board');
             while (alerts.firstChild) {
                alerts.removeChild(alerts.firstChild);
             }
         }
-        function displayContinuousAlert(message, color) {
-            clearContinuousAlerts();
+        function displayPersistentAlert(message, color) {
+            clearPersistentAlerts();
             var messageDiv = document.createElement('div');
             messageDiv.appendChild(document.createTextNode(message));
-            messageDiv.style = "position:absolute; top: 5vh; color:"+color+"; font-weight:bold; text-transform:capitalize; margin-left: 1em;";
-            messageDiv.setAttribute("id", "alert"+document.getElementsByClassName('continuous-alert').length);
-            messageDiv.setAttribute("class", "continuous-alert");
+            messageDiv.style = "position:absolute; top: 5vh; color:"+color+"; font-weight:bold; text-transform:capitalize; margin-left: 1em; font-size:5vh;";
+            messageDiv.setAttribute("id", "alert"+document.getElementsByClassName('persistent-alert').length);
+            messageDiv.setAttribute("class", "persistent-alert");
             messageDiv.appendChild(document.createElement('br'));
             document.getElementById('alert-message-board').appendChild(messageDiv);
 
         }
         function displayLaserArmedWarning(){
-            displayContinuousAlert('WARNING: laser armed!', 'yellow');
+            displayPersistentAlert('WARNING: laser armed!', 'yellow');
         }
         function displayLaserActiveWarning(){
-            displayContinuousAlert('DANGER: laser active!', 'red');
+            displayPersistentAlert('DANGER: laser active!', 'red');
         }
         function clearStatusArea(){
             statusArea = document.getElementById('status-area');
@@ -155,7 +165,7 @@
         function getTimeStamp(seconds) {
             return "" + Math.floor(seconds / 60) + ":" + ("0" + seconds % 60).slice(-2); 
         }
-        function showDiscoProgress(secElapsed, secTotal){
+        function showTrialProgress(secElapsed, secTotal){
             clearStatusArea();
 
             var statusMessage = document.createTextNode("Disco in progress... ");
@@ -175,20 +185,19 @@
             statusArea.appendChild(getSpan('elapsed-time-display', statusSpacer));
             statusArea.appendChild(getSpan('elapsed-time-display', trialLengthDisplay));
         }
-
         // Pass in a dict to update data display for a particular target.
         // If useLonghand is true, use the DOM IDs for keys, else use the JS shorthand:
         function updateTargetDataDisplay(dataObj, useLonghand){
             var dataIDs = {
-                "setF":"target-F-set-temp",
-                "tempF":"target-F-current-temp",
-                "xF":"target-F-x-pos",
-                "yF":"target-F-y-pos",
+                "setF"  :"target-F-set-temp",
+                "tempF" :"target-F-current-temp",
+                "xF"    :"target-F-x-pos",
+                "yF"    :"target-F-y-pos",
                 "movedF":"target-F-distance-moved",
-                "setM":"target-M-set-temp",
-                "tempM":"target-M-current-temp",
-                "xM":"target-M-x-pos",
-                "yM":"target-M-y-pos",
+                "setM"  :"target-M-set-temp",
+                "tempM" :"target-M-current-temp",
+                "xM"    :"target-M-x-pos",
+                "yM"    :"target-M-y-pos",
                 "movedM":"target-M-distance-moved",
             };
             for (var key in dataObj){
@@ -200,13 +209,13 @@
         function setStatusAreaColor(color){
             document.getElementById('status-area').style.backgroundColor=color;
         }
-        // isOn = true for green, isOn = false for red, isOn = undefined for transparent (reset)
+        // isOn = true for green, isOn = false for red
         function setIndicator(index, isOn){ 
-            if(isOn == undefined) {
-                var indicator=document.getElementsByClassName('indicator-light')[index].firstChild.style.backgroundColor = "transparent";    
-                return;
-            }
             var indicator=document.getElementsByClassName('indicator-light')[index].firstChild.style.backgroundColor = isOn ? "green" : "red";
+        }
+        // clears specified indicator by setting background to transparent
+        function clearIndicator(index) {
+            var indicator=document.getElementsByClassName('indicator-light')[index].firstChild.style.backgroundColor = "transparent";
         }
         function enablePrimaryActionButton(){
             document.getElementById("primary-action-button").removeAttribute("disabled");
@@ -231,10 +240,7 @@
             // Implement so that cam image updates from visual
 
             // REMOVE THIS! JUST TO SHOW FUNCTIONALITY DURING DEV!
-            clearContinuousAlerts();
-            clearStatusArea();
-            setIndicator(0);
-            setIndicator(1);
+            testVisuals(false);
         }
         document.getElementById('visual-button').addEventListener('click', setVisualView, true);
         setVisualView(); // start page with visual view on
@@ -242,15 +248,27 @@
         function setThermalView(){
             markViewAsThermal(true);
             // Implement so that cam image updates from thermal
-            clearContinuousAlerts();
+            clearPersistentAlerts();
 
             // REMOVE THIS! JUST TO SHOW FUNCTIONALITY DURING DEV!
-            displayLaserArmedWarning();
-            showDiscoProgress(68, 180);
-            setIndicator(0,false);
-            setIndicator(1,true);
+            testVisuals(true);
         }
         document.getElementById('thermal-button').addEventListener('click', setThermalView, true);
+
+
+        function testVisuals(turnOn){
+            if(turnOn) {
+                displayLaserArmedWarning();
+                showTrialProgress(68, 180);
+                setIndicator(0,false);
+                setIndicator(1,true);
+            } else {
+                clearPersistentAlerts();
+                clearStatusArea();
+                clearIndicator(0);
+                clearIndicator(1);
+            }
+        }
 
     </script>
 
