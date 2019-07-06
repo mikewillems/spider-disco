@@ -15,6 +15,30 @@
         .scroll::-webkit-scrollbar-thumb {
             background: #777; 
         }
+        .cam-select-button {
+            font-family:'Roboto Mono', monospace;
+            padding:1vh;
+            font-size:90%;
+            font-weight:bold;
+            text-transform:capitalize;
+            background-color:white;
+        }
+        .cam-select-button:focus {
+            outline: 0;
+        }
+        .cam-select-button:active {
+            border-top: 2.5px solid rgb(150,150,150);
+            border-left: 2.5px solid rgb(150,150,150);
+            border-bottom: 1px solid rgb(225,225,225);
+            border-right: 1px solid rgb(225,225,225);
+        }
+        .pressed-cam-select-button {
+            background-color: #f0f0f0;
+            border-top: 2.5px solid rgb(170,170,170);
+            border-left: 2.5px solid rgb(170,170,170);
+            border-bottom: 2px solid rgb(225,225,225);
+            border-right: 2px solid rgb(225,225,225);
+        }
     </style>
 </head>
 <body style="display:flex; flex-direction:row; justify-content:center; align-items:center; width:100vw; height:100vh; margin:0; font-family:'Roboto Mono', monospace; font-size:2.65vh;">
@@ -28,11 +52,11 @@
             <div id="video-container" style="width:960px; max-width:75vw; height:691px; max-height:90vh; position:relative; display:flex; flex-direction:row; align-items:center;">
                 <img id="visible-cam-output" src="visible_cam_output.jpg" alt="visible camera not connected" style="display:none;"/>
                 <img id="thermal-cam-output" src="thermal_cam_output.jpg" alt="thermal camera not connected" style="display:none;">
-                <div id="camera-select-bar" style="position:absolute; bottom:2px; left:2px; display:flex; justify-content:center; width:30%; height:auto; color:white; font-family:'Roboto Mono', monospace;">
-                    <button id="visual-button" class="tab-select cam-select-button" style="color:white; text-transform:capitalize; border:2px solid white; background-color:rgba(0,0,0,0.5); width:50%; font-size:90%; font-family:'Roboto Mono', monospace; padding: 1vh;">
+                <div id="camera-select-bar" style="position:absolute; bottom:2px; left:2px; display:flex; justify-content:center; width:30%; height:auto;">
+                    <button id="visual-button" class="tab-select cam-select-button" style="width:50%;">
                     visual
                     </button>
-                    <button id="thermal-button" class="tab-select cam-select-button" style="color:white; text-transform:capitalize; border:2px solid white; background-color:rgba(0,0,0,0.5); width:50%; font-size:90%; font-family:'Roboto Mono', monospace; padding: 1vh;">
+                    <button id="thermal-button" class="tab-select cam-select-button" style="width:50%;">
                     thermal
                     </button>
                 </div>    
@@ -155,13 +179,9 @@
             for (var cameraViewStateIndex in cameraViewState){
                 camViewSelectButton = camViewSelectButtons[cameraViewStateIndex];
                 if(cameraViewState[cameraViewStateIndex]){
-                    camViewSelectButton.style.color = "black";
-                    camViewSelectButton.style.backgroundColor = "white";
-                    camViewSelectButton.style.fontWeight = "bold";
+                    camViewSelectButton.classList.add('pressed-cam-select-button');
                 } else {
-                    camViewSelectButton.style.color = "white";
-                    camViewSelectButton.style.backgroundColor = "rgba(0,0,0,0.5)";
-                    camViewSelectButton.style.fontWeight = "normal";
+                    camViewSelectButton.classList.remove('pressed-cam-select-button');
                 }
             }
 
