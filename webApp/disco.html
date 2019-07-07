@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html style="width:100vw; height:100vh;">
 <head>
-    <title>This place feels... *groovy*</title>
+    <title>This place is *groovy*...</title>
     <link href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap" rel="stylesheet">
     <link rel="shortcut icon" href="fav1.ico">
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0">
@@ -71,7 +71,7 @@
         <div id="right-section" style="width:100%; height:100%; overflow-y:hidden;">
             <div id="right-section-scroll-wrapper" class="scroll" style="width:100%; padding:0; height:580px; max-height:76vh; overflow-y:auto; margin-bottom:0.5em;">
                 <div id="right-section-info-div" style="padding-left:1em; padding-right:1em; display:flex; flex-direction:column; justify-content: space-between;">
-                    <h1 id="screen-title" style="text-decoration:none; font-weight:bold; text-transform:uppercase; font-size:125%; padding-top:0.5em; text-align: center; border-bottom:2px solid black;">
+                    <h1 id="step-title" style="text-decoration:none; font-weight:bold; text-transform:uppercase; font-size:125%; padding-top:0.5em; text-align: center; border-bottom:2px solid black;">
                             Specimen Loading
                     </h1>
                     <p id="instruction-text" style="margin-top:0;">
@@ -79,17 +79,17 @@
                     </p>
                 </div>
                 <div id="right-section-views-div" style="padding-left:1em; padding-right:1em; display:flex; flex-direction:column; justify-content: space-between;">
-                    <div id="completed-trials-view">
+                    <div id="completed-trials-view"  class="view">
 
                     </div>
 
-                    <div id="trial-setup-view">
+                    <div id="trial-setup-view"  class="view">
                     </div>
 
-                    <div id="calibration-view">
+                    <div id="calibration-view"  class="view">
                     </div>
 
-                    <div id="target-data-view" style="margin:0; padding:0;">
+                    <div id="target-data-view"  class="view" style="margin:0; padding:0; display:none;">
                         <div id="target-U-info" style="display:flex; flex-direction:column; align-items:center; justify-content:space-around;">
                             <div style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:90%; text-align:center; color:rgb(42,116,145); border:2px solid rgb(42,116,145); font-weight:bold; font-size:110%;"><span>Target U</span><span>&#128393;</span></div>
                             <table style="margin-bottom:0.75em;">
@@ -119,26 +119,18 @@
                     <div id="calibrated-indicator" class="indicator-light" style="display:flex; flex-direction:row;"><div style="width:0.75em; height:0.75em; border:2px solid black; margin:2px; margin-right:.75em"></div><div>System Calibrated</div></div>
                 </div>
                 <div id="action-button-container" style="width:90%; height:76px; max-height:10vh; display:flex; flex-direction:row; justify-content:space-around; align-items:flex-end;">
-                    <button disabled id="secondary-action-button" style="font-size: 2.5vh; width:60px; max-width:7vh; height:90%; font-family:'Roboto Mono', monospace;"><span id="secondary-action-button-span" style="font-weight:bold;"><</span></button>
-                    <button disabled id="primary-action-button" style="font-size: 2.5vh; display:flex; flex-direction:row; justify-content:center; align-items:center; width:225px; max-width:25vh; height:90%; font-family:'Roboto Mono', monospace;"><span id="primary-action-button-span" style="font-weight:bold;">START TRIAL</span><span id="right-arrow-span" style="font-weight:bold;">&nbsp;></span></button>
+                    <button disabled id="secondary-action-button" style="font-weight:bold; font-size: 2.5vh; width:60px; max-width:7vh; height:90%; font-family:'Roboto Mono', monospace;"><span id="secondary-action-button-span"><</span></button>
+                    <button disabled id="primary-action-button" style="font-weight:bold; font-size: 2.5vh; display:flex; flex-direction:row; justify-content:center; align-items:center; width:225px; max-width:25vh; height:90%; font-family:'Roboto Mono', monospace;"><span id="primary-action-button-span" style="font-weight:bold;">START TRIAL</span><span id="right-arrow-span" style="font-weight:bold;">&nbsp;></span></button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="calibrate-screen">
+    <div id="load-popup" class="popup">
         
     </div>
 
-    <div id="trial-screen">
-        
-    </div>
-
-    <div id="load-popup">
-        
-    </div>
-
-    <div id="save-popup">
+    <div id="save-popup" class="popup">
         
     </div>
 
@@ -285,30 +277,137 @@
         function clearIndicator(index) {
             var indicator=document.getElementsByClassName('indicator-light')[index].firstChild.style.backgroundColor = "transparent";
         }
-        function enablePrimaryActionButton(){
-            document.getElementById("primary-action-button").removeAttribute("disabled");
+        function enablePrimaryActionButton(enable){
+            if(enable) {
+                document.getElementById("primary-action-button").removeAttribute("disabled");
+            } else {
+                document.getElementById("primary-action-button").setAttribute("disabled", "disabled");
+            }
         }
-        function disablePrimaryActionButton(){
-            document.getElementById("primary-action-button").setAttribute("disabled", "disabled");
+        function setPrimaryActionButtonText(text){
+            document.getElementById('primary-action-button-span').innerHTML = text;
         }
-        function setScreenTitleText(newTitle){
-            document.getElementById('screen-title').innerHTML = newTitle;
+        function enableBackButton(enable){
+            if(enable) {
+                document.getElementById("secondary-action-button").removeAttribute("disabled");
+            } else {
+                document.getElementById("secondary-action-button").setAttribute("disabled", "disabled");
+            }
+        }
+        function setStepTitleText(newTitle){
+            document.getElementById('step-title').innerHTML = newTitle;
         }
         function setInstructionText(newInstructions){
             document.getElementById('instruction-text').innerHTML = newInstructions;
         }
+        function setView(prevViewId, newViewId){
+            document.getElementById(prevViewId).style.display = 'none';            
+            document.getElementById(newViewId).style.display = 'block';
+        }
+        function setContent(){
 
+        }
+        function setStep(stepKey) {
+            if(stepKey){
+                var prevStepObj = discoSteps[currentStep];
+                currentStep = stepKey;
+                var currentStepObj = discoSteps[stepKey];
+                setStepTitleText(currentStepObj.title);
+                setView(prevStepObj.view, currentStepObj.view);
+                setInstructionText(currentStepObj.instructions);
+                setContent(currentStepObj.content);
+                setPrimaryActionButtonText(currentStepObj.actionButtonText);
+                enableBackButton(currentStepObj.previousStep);
+                if(stepKey == 'trial') {
+                    document.getElementById('right-arrow-span').innerHTML = '';
+                } else {
+                    document.getElementById('right-arrow-span').innerHTML = '&nbsp;>';
+                }
+            }
+        }
+        function pushBackButton(){
+            setStep(discoSteps[currentStep].previousStep);
+        }
+        function pushActionButton(){;
+            setStep(discoSteps[currentStep].nextStep);
+        }
+        var currentStep = 'home';        
+
+        var discoSteps = {
+            'home':{
+                'title':'Welcome to the Disco!',
+                'instructions':'Select a prior trial from the list below to name and send, or start a new trial by choosing Trial Setup.',
+                'view':'completed-trials-view',
+                'content':'',
+                'actionButtonText':'Trial Setup',
+                'previousStep':false,
+                'nextStep':'setup',
+            },
+            'setup':{
+                'title':'Trial Setup',
+                'instructions':'Select trial parameters.',
+                'view':'trial-setup-view',
+                'content':'',
+                'actionButtonText':'Calibration',
+                'previousStep':'home',
+                'nextStep':'calibration',
+            },
+            'calibration':{
+                'title':'Calibration',
+                'instructions':'Place the calibration tool in the center of the arena, then position the disco machine so that the entire arena floor is unobscured in the mask to the left.',
+                'view':'calibration-view',
+                'content':'',
+                'actionButtonText':'Specimen Loading',
+                'previousStep':'setup',
+                'nextStep':'placement',
+            },
+            'placement':{
+                'title':'Specimen Loading',
+                'instructions':'',
+                'content':'',
+                'view':'target-data-view',
+                'actionButtonText':'Safety Checks',
+                'previousStep':'calibration',
+                'nextStep':'safety',
+                // Individual sub-steps: Remove the calibration tool and place the specimen to be heated in the arena. Now place the unheated specimen in the arena.
+            },
+            'safety':{
+                'title':'Safety Checks',
+                'instructions':'This instrument uses a 300mW 808nm near-IR laser which is capable of causing permanent damage to they eye.',
+                'view':'target-data-view',
+                'content':'',
+                'actionButtonText':'START TRIAL',
+                'previousStep':'placement',
+                'nextStep':'trial',
+                // Checklist:
+                // All operators are using protective eyewear.
+                // The safety hood is in place.
+                // The experiment room is clearly marked on the outside to warn against entry by additional parties.
+            },
+            'trial':{
+                'title':'Trial in Progress',
+                'instructions':'Press "STOP TRIAL" at any time to end the current trial and turn off the laser.',
+                'view':'target-data-view',
+                'content':'',
+                'actionButtonText':'STOP TRIAL',
+                'previousStep':false,
+                'nextStep':'home',
+            },
+        }
 
         function initializeAppUI(){
             // Button 0 = Visual, Button 1 = Thermal
             cameraViewState = [false, false];
             pushCameraViewButton(0);
             pushCameraViewButton(1);
+            setStep('home');
+            enablePrimaryActionButton(true);
 
             document.getElementById('visual-button').addEventListener('click', ()=>{pushCameraViewButton(0);}, true);
             document.getElementById('thermal-button').addEventListener('click', ()=>{pushCameraViewButton(1);}, true);
+            document.getElementById('primary-action-button').addEventListener('click', pushActionButton, true);
+            document.getElementById('secondary-action-button').addEventListener('click', pushBackButton, true);
 
-            setInstructionText('Select a prior trial from the list below to name and send, or start a new trial by choosing "Setup".');
         }
         initializeAppUI();
 
