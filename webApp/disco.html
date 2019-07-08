@@ -68,6 +68,12 @@
             width:100%;
             border: 1px solid black;
         }
+        .sub-step-button {
+            margin-top:1em;
+            font-weight:bold;
+            font-size: 2.5vh;
+            font-family:'Roboto Mono', monospace;
+        }
     </style>
 </head>
 <body style="display:flex; flex-direction:row; justify-content:center; align-items:center; width:100vw; height:100vh; margin:0; font-family:'Roboto Mono', monospace; font-size:2.65vh;">
@@ -157,19 +163,12 @@
                         </div>
                     </div>
 
-                    <div id="calibration-view"  class="view">
+                    <div id="calibration-view"  class="view" style="width:100%; display:hidden; flex-direction:column; align-items:center;">
+                        Press the "Calibrate" button when ready.
+                        <button class="sub-step-button">Calibrate</button>
                     </div>
 
                     <div id="target-data-view"  class="view" style="margin:0; padding:0; display:none;">
-                        <div id="target-U-info" style="display:flex; flex-direction:column; align-items:center; justify-content:space-around;">
-                            <div style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:90%; text-align:center; color:rgb(42,116,145); border:2px solid rgb(42,116,145); font-weight:bold; font-size:110%;"><span>Target U</span><span>&#128393;</span></div>
-                            <table style="margin-bottom:0.75em;">
-                                <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Set: </span></span></td><td><span id="target-U-set-temp">--</span>&#8451;</td></tr>
-                                <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Temp: </span></td><td><span id="target-U-current-temp">--</span>&#8451;</td></tr>
-                                <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">(x,y): </span></td><td><span id="target-U-x-pos">--</span>mm,<span id="target-U-y-pos">--</span>mm</td></tr>
-                                <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Moved: </span></td><td><span id="target-U-distance-moved">--</span>mm</td></tr>
-                            </table>
-                        </div>
                         <div id="target-H-info" style="display:flex; flex-direction:column; align-items:center; justify-content:space-around;">
                             <div style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:90%; text-align:center; color:rgb(104,0,52); border:2px solid rgb(104,0,52); font-weight:bold; font-size:110%;"><span>Target H</span><span>&#128393;</span></div>
                             <table style="margin-bottom:0.75em;">
@@ -179,6 +178,23 @@
                                 <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Moved: </span></td><td><span id="target-H-distance-moved">--</span>mm</td></tr>
                             </table>
                         </div>
+                        <div id="target-U-info" style="display:flex; flex-direction:column; align-items:center; justify-content:space-around;">
+                            <div style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:90%; text-align:center; color:rgb(42,116,145); border:2px solid rgb(42,116,145); font-weight:bold; font-size:110%;"><span>Target U</span><span>&#128393;</span></div>
+                            <table style="margin-bottom:0.75em;">
+                                <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Temp: </span></td><td><span id="target-U-current-temp">--</span>&#8451;</td></tr>
+                                <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">(x,y): </span></td><td><span id="target-U-x-pos">--</span>mm,<span id="target-U-y-pos">--</span>mm</td></tr>
+                                <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Moved: </span></td><td><span id="target-U-distance-moved">--</span>mm</td></tr>
+                            </table>
+                        </div>
+                        <div>
+                            <button id="first-placement-button" class="sub-step-button">Heated Target has been placed.</button>
+                            <button id="second-placement-button" class="sub-step-button" disabled="disabled">Unheated target has been placed.</button>
+                        </div>
+                    </div>
+                    <div id="safety-check-view" class="view" style="margin:0; padding:0; display:none;">
+                        <button class="sub-step-button">All operators are using protective eyewear.</button>
+                        <button class="sub-step-button">Safety hood is in place.</button>
+                        <button class="sub-step-button">The experiment room is clearly marked on the outside to warn against entry by additional parties.</button>
                     </div>    
                 </div>
                 
@@ -211,9 +227,10 @@
 
         // Button 0 = Visual, Button 1 = Thermal
         var cameraViewState = [false, false];
-        function updateCameraView(){
-            let showVisible = cameraViewState[0];
-            let showThermal = cameraViewState[1];
+        function updateCameraView(customViewState){
+            let viewState = customViewState?customViewState:cameraViewState;
+            let showVisible = viewState[0];
+            let showThermal = viewState[1];
             let visibleCamElement = document.getElementById('visible-cam-output');
             let thermalCamElement = document.getElementById('thermal-cam-output');
             let numActiveCamsViews = +showVisible + +showThermal;
@@ -248,6 +265,9 @@
                 }
             }
 
+        }
+        function showCameraViewButtons(visible){
+            document.getElementById('camera-select-bar').style.display = visible ? 'flex':'none';
         }
         function pushCameraViewButton(index){            
             // If at least one camera is selected after toggling the view that was pressed, toggles that camera's visibility and update buttons:
@@ -403,17 +423,27 @@
         function pushActionButton(){;
             setStep(discoSteps[currentStep].nextStep);
         }
+        function enableSecondPlacement(){
+            document.getElementById('second-placement-button').removeAttribute('disabled');
+        }
         function initHomeStep(){
 
         }
         function initSetupStep(){
- 
+            showCameraViewButtons(true);
+            updateCameraView();
         }
         function initCalibrationStep(){
-
+            updateCameraView([true,false]);
+            updateCameraButtonView();
+            showCameraViewButtons(false);
         }
         function initPlacementStep(){
-
+            showCameraViewButtons(true);
+            updateCameraView();
+            enablePrimaryActionButton(false);
+            document.getElementById('first-placement-button').addEventListener('click',enableSecondPlacement,true);
+            document.getElementById('second-placement-button').addEventListener('click',()=>{enablePrimaryActionButton(true);},true);
         }
         function initSafetyStep(){
 
@@ -468,7 +498,7 @@
             'safety':{
                 'title':'Safety Checks',
                 'instructions':'This instrument uses a 300mW 808nm near-IR laser which is capable of causing permanent damage to they eye.',
-                'view':'target-data-view',
+                'view':'safety-check-view',
                 'content':'',
                 'actionButtonText':'START TRIAL',
                 'initialize':initSafetyStep,
