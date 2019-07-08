@@ -39,6 +39,35 @@
             border-bottom: 2px solid rgb(225,225,225);
             border-right: 2px solid rgb(225,225,225);
         }
+        .view {
+            margin:0; 
+            padding:0; 
+            display:none;
+        }
+        a, a:visited {
+            color:black;
+            text-decoration:none;
+        }
+        li {
+            margin-top:0.5em;
+        }
+        .disabled-datum {
+            background-color:rgb(225,225,225);
+            color:rgb(100,100,100);
+        }
+        .setup-datum {
+            margin-top:.5em;
+        }
+        .setup-datum-title {
+            font-weight: bold;
+        }
+        .setup-datum-value {
+            font-size:120%;
+            text-indent:1em;
+            margin-top:0.25em;
+            width:100%;
+            border: 1px solid black;
+        }
     </style>
 </head>
 <body style="display:flex; flex-direction:row; justify-content:center; align-items:center; width:100vw; height:100vh; margin:0; font-family:'Roboto Mono', monospace; font-size:2.65vh;">
@@ -50,8 +79,8 @@
             </div>
 
             <div id="video-container" style="width:960px; max-width:75vw; height:691px; max-height:90vh; position:relative; display:flex; flex-direction:row; align-items:center;">
-                <img id="visible-cam-output" src="visible_cam_output.jpg" alt="visible camera not connected" style="display:none;"/>
-                <img id="thermal-cam-output" src="thermal_cam_output.jpg" alt="thermal camera not connected" style="display:none;">
+                <img id="visible-cam-output" src="visible_cam_output.png" alt="visible camera not connected" style="display:none;"/>
+                <img id="thermal-cam-output" src="thermal_cam_output.png" alt="thermal camera not connected" style="display:none;">
                 <div id="camera-select-bar" style="position:absolute; bottom:2px; left:2px; display:flex; justify-content:center; width:30%; height:auto;">
                     <button id="visual-button" class="tab-select cam-select-button" style="width:50%;">
                     visual
@@ -71,19 +100,61 @@
         <div id="right-section" style="width:100%; height:100%; overflow-y:hidden;">
             <div id="right-section-scroll-wrapper" class="scroll" style="width:100%; padding:0; height:580px; max-height:76vh; overflow-y:auto; margin-bottom:0.5em;">
                 <div id="right-section-info-div" style="padding-left:1em; padding-right:1em; display:flex; flex-direction:column; justify-content: space-between;">
-                    <h1 id="step-title" style="text-decoration:none; font-weight:bold; text-transform:uppercase; font-size:125%; padding-top:0.5em; text-align: center; border-bottom:2px solid black;">
-                            Specimen Loading
-                    </h1>
-                    <p id="instruction-text" style="margin-top:0;">
-                        Place the unheated specimen in the arena, then press "Continue".
-                    </p>
+                    <h1 id="step-title" style="text-decoration:none; font-weight:bold; text-transform:uppercase; font-size:125%; padding-top:0.5em; text-align: center; border-bottom:2px solid black;"></h1>
+                    <p id="instruction-text" style="margin-top:0;"></p>
                 </div>
                 <div id="right-section-views-div" style="padding-left:1em; padding-right:1em; display:flex; flex-direction:column; justify-content: space-between;">
-                    <div id="completed-trials-view"  class="view">
 
+                    <div id="completed-trials-view"  class="view" style="margin:0; padding:0; display:none; border: 1px solid rgb(170,170,170); background-color: rgb(225,225,225);">
+                        <ul id="completed-trials-list" style="list-style-type:none; margin:0.5em; padding:0;">
+                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
+                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
+                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
+                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
+                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
+                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
+                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
+                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
+                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
+                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
+                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
+                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
+                        </ul>
                     </div>
 
                     <div id="trial-setup-view"  class="view">
+                        <div class="setup-datum">
+                            <div class="setup-datum-title">
+                                Duration
+                            </div>
+                            <div class="setup-datum-value" id="setup">
+                                manual (max)
+                            </div>
+                        </div>
+                        <div class="setup-datum">
+                            <div class="setup-datum-title">
+                                Max Power
+                            </div>
+                            <div class="setup-datum-value" id="setup">
+                                100.0
+                            </div>
+                        </div>
+                        <div class="setup-datum">
+                            <div class="setup-datum-title">
+                                Target Set Temp Delta
+                            </div>
+                            <div class="setup-datum-value" id="setup">
+                                12&#8451;
+                            </div>
+                        </div>
+                        <div class="setup-datum">
+                            <div class="setup-datum-title">
+                                Ambient Setting
+                            </div>
+                            <div class="setup-datum-value disabled-datum" id="setup">
+                                disabled
+                            </div>
+                        </div>
                     </div>
 
                     <div id="calibration-view"  class="view">
@@ -323,6 +394,7 @@
                 } else {
                     document.getElementById('right-arrow-span').innerHTML = '&nbsp;>';
                 }
+                currentStepObj.initialize();
             }
         }
         function pushBackButton(){
@@ -331,15 +403,34 @@
         function pushActionButton(){;
             setStep(discoSteps[currentStep].nextStep);
         }
+        function initHomeStep(){
+
+        }
+        function initSetupStep(){
+ 
+        }
+        function initCalibrationStep(){
+
+        }
+        function initPlacementStep(){
+
+        }
+        function initSafetyStep(){
+
+        }
+        function initTrialStep(){
+
+        }
         var currentStep = 'home';        
 
         var discoSteps = {
             'home':{
                 'title':'Welcome to the Disco!',
-                'instructions':'Select a prior trial from the list below to name and send, or start a new trial by choosing Trial Setup.',
+                'instructions':'Select a prior trial from the list below to review and send, or start a new trial by choosing Trial Setup.',
                 'view':'completed-trials-view',
                 'content':'',
                 'actionButtonText':'Trial Setup',
+                'initialize':initHomeStep,
                 'previousStep':false,
                 'nextStep':'setup',
             },
@@ -349,6 +440,7 @@
                 'view':'trial-setup-view',
                 'content':'',
                 'actionButtonText':'Calibration',
+                'initialize':initSetupStep,
                 'previousStep':'home',
                 'nextStep':'calibration',
             },
@@ -358,6 +450,7 @@
                 'view':'calibration-view',
                 'content':'',
                 'actionButtonText':'Specimen Loading',
+                'initialize':initCalibrationStep,
                 'previousStep':'setup',
                 'nextStep':'placement',
             },
@@ -367,6 +460,7 @@
                 'content':'',
                 'view':'target-data-view',
                 'actionButtonText':'Safety Checks',
+                'initialize':initPlacementStep,
                 'previousStep':'calibration',
                 'nextStep':'safety',
                 // Individual sub-steps: Remove the calibration tool and place the specimen to be heated in the arena. Now place the unheated specimen in the arena.
@@ -377,6 +471,7 @@
                 'view':'target-data-view',
                 'content':'',
                 'actionButtonText':'START TRIAL',
+                'initialize':initSafetyStep,
                 'previousStep':'placement',
                 'nextStep':'trial',
                 // Checklist:
@@ -390,6 +485,7 @@
                 'view':'target-data-view',
                 'content':'',
                 'actionButtonText':'STOP TRIAL',
+                'initialize':initTrialStep,
                 'previousStep':false,
                 'nextStep':'home',
             },
@@ -427,6 +523,14 @@
             }
         }
 
+// SYNCHRONIZATION
+
+        function refreshCameraImages(){
+            let randNum = Math.floor(Math.random()*Math.pow(10,10));
+            document.getElementById('visible-cam-output').src = 'visible_cam_output.png?'+randNum;
+            document.getElementById('thermal-cam-output').src = 'thermal_cam_output.png?'+randNum;
+        }
+        setInterval(refreshCameraImages, 500);
 
 // HARDWARE INTERFACE FUNCTIONS
     
