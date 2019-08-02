@@ -52,7 +52,7 @@
         li {
             margin-top:0.5em;
         }
-        .disabled-datum {
+        .disabled-input {
             background-color:rgb(225,225,225);
             color:rgb(100,100,100);
         }
@@ -62,12 +62,47 @@
         .setup-datum-title {
             font-weight: bold;
         }
-        .setup-datum-value {
-            font-size:120%;
+        .entry-anchor {
+            position:relative;
+            width:100%;
+        }
+        .setup-datum-value, .setup-datum-entry {
             text-indent:1em;
             margin-top:0.25em;
-            width:100%;
             border: 1px solid black;
+        }
+        .setup-datum-entry {
+            background-color:rgb(225,245,255);
+            min-width:8em;
+            max-width:50vw;
+            width:100%;
+            position:absolute;
+            right:0;
+            top:-2em;
+            display:flex;
+            flex-direction:row;
+            justify-content:space-between;
+        }
+        .plus-minus-button, .setup-entry-cur-val {
+            margin:0.25em;
+            width:1.5em;
+            height:1.5em;
+            text-align:center;
+            display:flex;
+            flex-direction:row;
+            justify-content:center;
+            align-items:center;
+            font-weight:bold;
+            border: 1px solid #474747;
+            text-indent:0;
+        }
+        .plus-minus-button {
+            background-color:white;
+        }
+        .setup-entry-cur-val {
+            height:auto;
+            width:auto;
+            border:none;
         }
         .sub-step-button, .safety-step-button {
             min-height:2.5em;
@@ -134,42 +169,70 @@
                     </div>
 
                     <div id="trial-setup-view"  class="view">
-                        <div class="setup-datum">
+                        <div id="duration-datum" class="setup-datum">
                             <div class="setup-datum-title">
                                 Duration
                             </div>
-                            <div class="setup-datum-value" id="setup">
+                            <div class="setup-datum-value" id="setup-duration-display">
                                 manual (max)
                             </div>
+                            <div class="entry-anchor">
+                                <div class="setup-datum-entry hidden" id="setup-duration-entry">
+                                    <button id="duration-decrement-button" class="plus-minus-button">-</button>
+                                    <span id="setup-duration-cur-val" class="setup-entry-cur-val"></span>
+                                    <button id="duration-increment-button" class="plus-minus-button">+</button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="setup-datum">
+                        <div id="power-datum" class="setup-datum">
                             <div class="setup-datum-title">
                                 Max Power
                             </div>
-                            <div class="setup-datum-value" id="setup">
+                            <div class="setup-datum-value" id="setup-max-power-display">
                                 100.0
                             </div>
+                            <div class="entry-anchor">
+                                <div class="setup-datum-entry hidden" id="setup-power-entry">
+                                    <button id="power-decrement-button" class="plus-minus-button">-</button>
+                                    <span id="setup-power-cur-val" class="setup-entry-cur-val"></span>
+                                    <button id="power-increment-button" class="plus-minus-button">+</button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="setup-datum">
+                        <div id="temp-datum" class="setup-datum">
                             <div class="setup-datum-title">
                                 Target Set Temp Delta
                             </div>
-                            <div class="setup-datum-value" id="setup">
+                            <div class="setup-datum-value" id="setup-temp-delta-display">
                                 12&#8451;
                             </div>
+                            <div class="entry-anchor">
+                                <div class="setup-datum-entry hidden" id="setup-temp-entry">
+                                    <button id="temp-decrement-button" class="plus-minus-button">-</button>
+                                    <span id="setup-temp-cur-val" class="setup-entry-cur-val"></span>
+                                    <button id="temp-increment-button" class="plus-minus-button">+</button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="setup-datum">
+                        <div id="ambient-datum" class="setup-datum disabled-datum">
                             <div class="setup-datum-title">
                                 Ambient Setting
                             </div>
-                            <div class="setup-datum-value disabled-datum" id="setup">
+                            <div class="setup-datum-value disabled-input" id="setup-ambient-display">
                                 disabled
                             </div>
+                            <div class="entry-anchor">
+                                <div class="setup-datum-entry hidden" id="setup-ambient-entry">
+                                    <button id="ambient-decrement-button" class="plus-minus-button">-</button>
+                                    <span id="setup-ambient-cur-val" class="setup-entry-cur-val"></span>
+                                    <button id="ambient-increment-button" class="plus-minus-button">+</button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="setup-datum" style="text-align:right;">
-                            <input class="hidden" type="file" accept="*.json" id="past-profile-input"></input>
+                        <div style="text-align:right;">
                             <button id="load-profile-button" class="sub-step-button" style="margin-right:1em;">Load</button><button id="save-profile-button" class="sub-step-button">Save</button>
                         </div>
+                        <input class="hidden" type="file" accept="*.json" id="past-profile-input"></input>
                     </div>
 
                     <div id="calibration-view"  class="view" style="width:100%; display:hidden; flex-direction:column; align-items:center;">
@@ -470,8 +533,12 @@
         function parseProfileJSON(jsonString) {
             
         }
-        function readProfile(){ // also sets inputs
+        function loadProfile(){ // also sets inputs
 
+        }
+        function readSetupInputs(){
+            let profileObj = {};
+            return profileObj;
         }
         var priorTrialName = "";
         var priorTrialContent = "";
@@ -522,6 +589,33 @@
             'tempDelta':0,
             'power':100,
         };
+        function toggleSetupEntryDisplay(datumId){
+            let datum = document.getElementById(datumId);
+            let entry = datum.querySelectorAll('.setup-datum-entry')[0];
+            if (entry.style.display === "none") {
+                let allEntries = document.getElementsByClassName('setup-datum-entry');
+                for (let i = 0; i < allEntries.length; i++) {
+                    allEntries[i].style.display = "none";
+                }
+                document.addEventListener('click', (e)=> {
+                    e.target.removeEventListener(e.type, arguments.callee);
+                    let classes = e.target.classList;
+                    if (! ( classes.contains('setup-datum-entry') || classes.contains('setup-entry-cur-val') || classes.contains('plus-minus-button'))) {
+                        let allEntries = document.getElementsByClassName('setup-datum-entry');
+                        for (let i = 0; i < allEntries.length; i++) {
+                            allEntries[i].style.display = "none";
+                        }
+                    }
+                }, 'false');
+                entry.style.display = "flex";
+                entry.querySelectorAll('.setup-entry-cur-val')[0].innerText = datum.querySelectorAll('.setup-datum-value')[0].innerText;
+            } else {
+                entry.style.display = "none";
+                let newVal = entry.querySelectorAll('.setup-entry-cur-val')[0].innerText;
+                datum.querySelectorAll('.setup-datum-value')[0].innerText = newVal;
+                setProfile(readSetupInputs);
+            }
+        }
         function stopTrialManually(){
             stopLaser();
             clearInterval(heartbeatInterval);
@@ -683,6 +777,14 @@
             // setup
             listenForConfigFileInputChange();
             document.getElementById('load-profile-button').addEventListener('click',()=>{document.getElementById('past-profile-input').click();}, false);
+            let setupData = document.getElementsByClassName('setup-datum');
+            for (let i = 0; i < setupData.length; i++) {
+                if (! setupData[i].classList.contains('disabled-datum')) {
+                    setupData[i].addEventListener('click', ()=>{
+                        toggleSetupEntryDisplay(setupData[i].id);
+                    },false);
+                }
+            }
 
             // calibration
             document.getElementById('calibrate-button').addEventListener('click',()=>{calibrateSystem();},false);
