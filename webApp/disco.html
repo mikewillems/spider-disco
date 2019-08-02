@@ -99,12 +99,12 @@
             <div id="alert-message-board" style="display:fixed; position:absolute; z-index:1000000; width:960px; max-width:75vw; background-color:rgba(0,0,0,.5);">
             </div>
 
-            <div id="video-container" style="width:960px; max-width:75vw; height:691px; max-height:90vh; position:relative; display:flex; flex-direction:row; align-items:center;">
+            <div id="video-container" style="width:960px; max-width:75vw; height:691px; max-height:90vh; position:relative; display:flex; flex-direction:row; align-items:center; justify-content:center;">
                 <img id="visible-cam-output" src="visible_cam_output.png" alt="visible camera not connected" style="display:none;"/>
                 <img id="thermal-cam-output" src="thermal_cam_output.png" alt="thermal camera not connected" style="display:none;">
                 <div id="camera-select-bar" style="position:absolute; bottom:2px; left:2px; display:flex; justify-content:center; width:30%; height:auto;">
-                    <button id="visual-button" class="tab-select cam-select-button" style="width:50%;">
-                    visual
+                    <button id="visible-button" class="tab-select cam-select-button" style="width:50%;">
+                    visible
                     </button>
                     <button id="thermal-button" class="tab-select cam-select-button" style="width:50%;">
                     thermal
@@ -242,7 +242,7 @@
 
 // FRONT-END FUNCTIONS
 
-        // Button 0 = Visual, Button 1 = Thermal
+        // Button 0 = Visible, Button 1 = Thermal
         var cameraViewState = [false, false];
         function updateCameraView(customViewState){
             let viewState = customViewState?customViewState:cameraViewState;
@@ -253,9 +253,9 @@
             let numActiveCamsViews = +showVisible + +showThermal;
             if(numActiveCamsViews == 1) {
                 visibleCamElement.style.width = "100%";
-                //visibleCamElement.style.height = "100%";
+                visibleCamElement.style.maxWidth = "120vh";
                 thermalCamElement.style.width = "100%";
-                //thermalCamElement.style.height = "100%";
+                thermalCamElement.style.maxWidth = "120vh";
             }
             if(numActiveCamsViews == 2) {
                 visibleCamElement.style.width = "50%";
@@ -660,14 +660,14 @@
 
         function initializeAppUI(){
 
-            // Button 0 = Visual, Button 1 = Thermal
+            // Button 0 = visible, Button 1 = Thermal
             cameraViewState = [false, false];
             pushCameraViewButton(0);
             pushCameraViewButton(1);
             setStep('home');
             enablePrimaryActionButton(true);
 
-            document.getElementById('visual-button').addEventListener('click', ()=>{pushCameraViewButton(0);}, false);
+            document.getElementById('visible-button').addEventListener('click', ()=>{pushCameraViewButton(0);}, false);
             document.getElementById('thermal-button').addEventListener('click', ()=>{pushCameraViewButton(1);}, false);
             document.getElementById('primary-action-button').addEventListener('click', pushActionButton, false);
             document.getElementById('secondary-action-button').addEventListener('click', pushBackButton, false);
