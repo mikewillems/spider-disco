@@ -56,7 +56,7 @@
             color:rgb(100,100,100);
         }
         .setup-datum {
-            margin-top:.5em;
+            margin-top:0.5em;
         }
         .setup-datum-title {
             font-weight: bold;
@@ -68,11 +68,26 @@
             width:100%;
             border: 1px solid black;
         }
-        .sub-step-button {
+        .sub-step-button, .safety-step-button {
+            min-height:2.5em;
             margin-top:1em;
             font-weight:bold;
             font-size: 2.5vh;
             font-family:'Roboto Mono', monospace;
+        }
+        .completed-safety-step {
+            flex-direction: row;
+            margin-bottom: 0.5em;
+        }
+        .completed-safety-step div{
+            margin-left: 0.5em;
+        }
+        .completed-safety-step img{
+            height: 16px;
+            margin-top: 5px;
+        }
+        .hidden {
+            display: none;
         }
     </style>
 </head>
@@ -111,21 +126,10 @@
                 </div>
                 <div id="right-section-views-div" style="padding-left:1em; padding-right:1em; display:flex; flex-direction:column; justify-content: space-between;">
 
-                    <div id="completed-trials-view"  class="view" style="margin:0; padding:0; display:none; border: 1px solid rgb(170,170,170); background-color: rgb(225,225,225);">
-                        <ul id="completed-trials-list" style="list-style-type:none; margin:0.5em; padding:0;">
-                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
-                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
-                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
-                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
-                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
-                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
-                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
-                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
-                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
-                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
-                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
-                            <li class="trial-list-entry">2019-07-08_17:04:36</li>
-                        </ul>
+                    <div id="completed-trials-view"  class="view" style="">
+                        <input class="hidden" type="file" accept="*.json" id="past-trial-input"></input>
+                        <button id="review-trial-button" class="sub-step-button">Review past trial info</button><br/>
+                        <button id="upload-trial-button" class="sub-step-button">Upload trials to drive</button>
                     </div>
 
                     <div id="trial-setup-view"  class="view">
@@ -161,18 +165,22 @@
                                 disabled
                             </div>
                         </div>
+                        <div class="setup-datum" style="text-align:right;">
+                            <input class="hidden" type="file" accept="*.json" id="past-profile-input"></input>
+                            <button id="load-profile-button" class="sub-step-button" style="margin-right:1em;">Load</button><button id="save-profile-button" class="sub-step-button">Save</button>
+                        </div>
                     </div>
 
                     <div id="calibration-view"  class="view" style="width:100%; display:hidden; flex-direction:column; align-items:center;">
                         Press the "Calibrate" button when ready.
-                        <button class="sub-step-button">Calibrate</button>
+                        <button id="calibrate-button" class="sub-step-button">Calibrate</button>
                     </div>
 
-                    <div id="target-data-view"  class="view" style="margin:0; padding:0; display:none;">
+                    <div id="target-data-view"  class="view" style="margin:0; padding:0;">
                         <div id="target-H-info" style="display:flex; flex-direction:column; align-items:center; justify-content:space-around;">
                             <div style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:90%; text-align:center; color:rgb(104,0,52); border:2px solid rgb(104,0,52); font-weight:bold; font-size:110%;"><span>Target H</span><span>&#128393;</span></div>
                             <table style="margin-bottom:0.75em;">
-                                <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Set: </span></span></td><td><span id="target-H-set-temp">--</span>&#8451;</td></tr>
+                                <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Set: </span></td><td><span id="target-H-set-temp">--</span>&#8451;</td></tr>
                                 <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Temp: </span></td><td><span id="target-H-current-temp">--</span>&#8451;</td></tr>
                                 <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">(x,y): </span></td><td><span id="target-H-x-pos">--</span>mm,<span id="target-H-y-pos">--</span>mm</td></tr>
                                 <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Moved: </span></td><td><span id="target-H-distance-moved">--</span>mm</td></tr>
@@ -186,18 +194,35 @@
                                 <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Moved: </span></td><td><span id="target-U-distance-moved">--</span>mm</td></tr>
                             </table>
                         </div>
-                        <div>
-                            <button id="first-placement-button" class="sub-step-button">Heated Target has been placed.</button>
-                            <button id="second-placement-button" class="sub-step-button" disabled="disabled">Unheated target has been placed.</button>
+                        <div style="width:100%; display:flex; flex-direction:row; justify-content:center;">
+                            <button id="swap-target-button" class="sub-step-button hidden">Swap targets!</button>
                         </div>
                     </div>
-                    <div id="safety-check-view" class="view" style="margin:0; padding:0; display:none;">
-                        <button class="sub-step-button">All operators are using protective eyewear.</button>
-                        <button class="sub-step-button">Safety hood is in place.</button>
-                        <button class="sub-step-button">The experiment room is clearly marked on the outside to warn against entry by additional parties.</button>
-                    </div>    
+                    <div id="safety-check-view" class="view" style="margin:0; padding:0;">
+                        <div class="safety-step-text hidden">Are all operators wearing approved eye protection?</div>
+                        <button class="safety-step-button hidden">Eye protection is on!</button>
+                        <div class="completed-safety-step hidden"><img src="checkmark.png"><div>All operators are wearing eye protection.</div></div>
+                        
+                        <div class="safety-step-text hidden">Operators must keep their heads clear of the area underneath the laser shield.</div>
+                        <button class="safety-step-button hidden">We will stay clear!</button>
+                        <div class="completed-safety-step hidden"><img src="checkmark.png"><div>Operators won't look under shields.</div></div>
+                        
+                        <div class="safety-step-text hidden">The room must be kept closed and clearly marked as dangerous during tests.</div>
+                        <button class="safety-step-button hidden">Door is closed, sign is up!</button>
+                        <div class="completed-safety-step hidden"><img src="checkmark.png"><div>Room is closed and marked dangerous.</div></div>
+                        
+                        <div class="safety-step-text hidden">Reflective surfaces below the instrument could focus its laser in an unsafe direction.</div>
+                        <button class="safety-step-button hidden">Instrument is on a matte surface!</button>
+                        <div class="completed-safety-step hidden"><img src="checkmark.png"><div>Instrument is on a non-reflective surface.</div></div>
+                        
+                        <div class="safety-step-text hidden">Reflective tools can also potentially focus the laser in an unsafe direction.</div>
+                        <button class="safety-step-button hidden">No reflective tools here!</button>
+                        <div class="completed-safety-step hidden"><img src="checkmark.png"><div>All tools are non-reflective.</div></div>
+                    </div>
+                    <div id="empty-view"></div>
+                    <div id="dynamic-content-view"></div>
+                    <div></div>
                 </div>
-                
             </div>
             <div id="right-section-static-div" style="margin-left:0.75em; margin-right:0.75em; display:flex; flex-direction:column; justify-content:space-between;">
                 <div id="indicators-div" style="display:flex; flex-direction:column; align-items:flex-start; margin-left: 0.75em; font-size:90%; height:88px; max-height:12vh;">
@@ -211,14 +236,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <div id="load-popup" class="popup">
-        
-    </div>
-
-    <div id="save-popup" class="popup">
-        
     </div>
 
     <script type="text/javascript">
@@ -236,15 +253,15 @@
             let numActiveCamsViews = +showVisible + +showThermal;
             if(numActiveCamsViews == 1) {
                 visibleCamElement.style.width = "100%";
-                visibleCamElement.style.height = "100%";
+                //visibleCamElement.style.height = "100%";
                 thermalCamElement.style.width = "100%";
-                thermalCamElement.style.height = "100%";
+                //thermalCamElement.style.height = "100%";
             }
             if(numActiveCamsViews == 2) {
                 visibleCamElement.style.width = "50%";
-                visibleCamElement.style.height = "50%";
+                //visibleCamElement.style.height = "50%";
                 thermalCamElement.style.width = "50%";
-                thermalCamElement.style.height = "50%";
+                //thermalCamElement.style.height = "50%";
             }
             
             if(showVisible) {visibleCamElement.style.display = "flex";}
@@ -307,6 +324,10 @@
                statusArea.removeChild(statusArea.firstChild);
             }
         }
+        function setStatusAreaText(newText){
+            statusArea = document.getElementById('status-area');
+            statusArea.innerText = newText;
+        }
         function getSpan(id, contentNode) {
             var newSpan = document.createElement('span');
             newSpan.setAttribute('id', id);
@@ -314,7 +335,7 @@
             return newSpan;
         }
         function getTimeStamp(seconds) {
-            return "" + Math.floor(seconds / 60) + ":" + ("0" + seconds % 60).slice(-2); 
+            return "" + Math.floor(seconds / 60) + ":" + ("0" + Math.floor(seconds) % 60).slice(-2); 
         }
         function showTrialProgress(secElapsed, secTotal){
             clearStatusArea();
@@ -323,33 +344,33 @@
 
             var progressBar = document.createElement('progress');
             progressBar.setAttribute('id', 'progress-bar');
-            progressBar.setAttribute('value', secElapsed);
-            progressBar.setAttribute('max', secTotal);
+            progressBar.setAttribute('value', secElapsed*1000);
+            progressBar.setAttribute('max', secTotal*1000);
 
             var elapsedTimeDisplay = document.createTextNode(getTimeStamp(secElapsed));
             var statusSpacer = document.createTextNode(" / ");
             var trialLengthDisplay = document.createTextNode(getTimeStamp(secTotal));
 
-            statusArea.appendChild(getSpan('progress-bar-span', statusMessage));
+            statusArea.appendChild(getSpan('status-message-span', statusMessage));
             statusArea.appendChild(getSpan('progress-bar-span', progressBar));
-            statusArea.appendChild(getSpan('elapsed-time-display', elapsedTimeDisplay));
-            statusArea.appendChild(getSpan('elapsed-time-display', statusSpacer));
-            statusArea.appendChild(getSpan('elapsed-time-display', trialLengthDisplay));
+            statusArea.appendChild(getSpan('elapsed-time-span', elapsedTimeDisplay));
+            statusArea.appendChild(getSpan('status-spacer-span', statusSpacer));
+            statusArea.appendChild(getSpan('trial-length-span', trialLengthDisplay));
         }
         // Pass in a dict to update data display for a particular target.
         // If useLonghand is true, use the DOM IDs for keys, else use the JS shorthand:
         function updateTargetDataDisplay(dataObj, useLonghand){
             var dataIDs = {
-                "setF"  :"target-U-set-temp",
-                "tempF" :"target-U-current-temp",
-                "xF"    :"target-U-x-pos",
-                "yF"    :"target-U-y-pos",
-                "movedF":"target-U-distance-moved",
-                "setM"  :"target-H-set-temp",
-                "tempM" :"target-H-current-temp",
-                "xM"    :"target-H-x-pos",
-                "yM"    :"target-H-y-pos",
-                "movedM":"target-H-distance-moved",
+                "setU"  :"target-U-set-temp",
+                "tempU" :"target-U-current-temp",
+                "xU"    :"target-U-x-pos",
+                "yU"    :"target-U-y-pos",
+                "movedU":"target-U-distance-moved",
+                "setH"  :"target-H-set-temp",
+                "tempH" :"target-H-current-temp",
+                "xH"    :"target-H-x-pos",
+                "yH"    :"target-H-y-pos",
+                "movedH":"target-H-distance-moved",
             };
             for (var key in dataObj){
                 let targetId = useLonghand ? key : dataIDs[key];
@@ -395,11 +416,15 @@
             document.getElementById(prevViewId).style.display = 'none';            
             document.getElementById(newViewId).style.display = 'block';
         }
-        function setContent(){
-
+        function setContent(outerHtml){
+            document.getElementById('dynamic-content-view').outerHTML = '<div id="dynamic-content-view">'+outerHtml+'</div>';
         }
         function setStep(stepKey) {
             if(stepKey){
+                var hiddenElements = document.getElementsByClassName('hidden');
+                for( let i = 0; i < hiddenElements.length; i++) {
+                    hiddenElements[i].style.display = "none";
+                }
                 var prevStepObj = discoSteps[currentStep];
                 currentStep = stepKey;
                 var currentStepObj = discoSteps[stepKey];
@@ -423,50 +448,162 @@
         function pushActionButton(){;
             setStep(discoSteps[currentStep].nextStep);
         }
-        function enableSecondPlacement(){
-            document.getElementById('second-placement-button').removeAttribute('disabled');
+        function enableSecondPlacement(isEnabled){
+            if(isEnabled) {
+                document.getElementById('second-placement-button').removeAttribute('disabled');
+            } else {
+                document.getElementById('second-placement-button').setAttribute('disabled','true');            
+            }
         }
-        function initHomeStep(){
+        function hidePlacementButtons(){
+            document.getElementById('first-placement-button').style.display = "none";
+            document.getElementById('second-placement-button').style.display = "none";
+        }
+        function showSwapButton(){
+            document.getElementById('swap-target-button').style.display = "block";
+        }
+        
+        function setProfile(profileObj) {
+            trialConfig = profileObj;
+        }
+        function parseProfileJSON(jsonString) {
+            
+        }
+        function readProfile(){ // also sets inputs
 
+        }
+        var priorTrialName = "";
+        var priorTrialContent = "";
+        function uploadTrial(){
+            // implement google upload here
+        }
+        function listenForPastTrialInputChange(){
+            let pastTrialInput = document.getElementById('past-trial-input');
+            pastTrialInput.addEventListener('change', function (e) { 
+                let selectedTrialFile = pastTrialInput.files[0];
+                let name = selectedTrialFile.name;
+                let size = selectedTrialFile.size;
+                displayTrialDetails(name, size); 
+            }, false);
+        }
+        function reviewTrialMetadata(){
+            document.getElementById('past-trial-input').click();
+        }
+        function displayTrialDetails(name, size) {
+            let trialDetailsHTML = `
+            <div id="trial-details-div">
+                <br>
+                <strong>Trial Name:</strong><br>
+                `+name+`<br><br>
+                <strong>Size:</strong><br>
+                `+size+`
+            </div>
+            `;
+            setContent(trialDetailsHTML);
+        }
+        function listenForConfigFileInputChange(){
+            var pastProfileInput = document.getElementById('past-profile-input');
+            pastProfileInput.addEventListener('change', function (e) { 
+                var pastProfileFile = pastProfileInput.files[0];
+                let selectedProfileName = pastProfileFile.name; 
+                var fileReader = new FileReader();
+                fileReader.onload = function (e) { 
+                    setProfile(parseProfileJSON(fileReader.result)); 
+                }
+                fileReader.readAsText(pastProfileFile);
+            }, false);
+        }
+        function pickExistingProfile(){
+            document.getElementById('past-profile-input').click();
+        }
+        var trialConfig = {
+            'duration':10,
+            'tempDelta':0,
+            'power':100,
+        };
+        function stopTrialManually(){
+            stopLaser();
+            clearInterval(heartbeatInterval);
+            clearStatusArea();
+            document.getElementById('primary-action-button').removeEventListener('click', stopTrialManually);
+            setStatusAreaText('Trial stopped manually.');
+            setStatusAreaColor('purple');
+        }
+        function concludeTrial(){
+            stopTrialManually();
+            setStatusAreaText('Trial concluded successfully.');
+            setStatusAreaColor('green');
+            setStep('home');
+        }
+        function terminateTrialWithError(errorMessage){
+            stopLaser();
+            clearInterval(heartbeatInterval);
+            clearStatusArea();
+            document.getElementById('primary-action-button').removeEventListener('click', stopTrialManually);
+            setStatusAreaText('Trial terminated due to error: '+errorMessage);
+            setStatusAreaColor('red');
+        }
+
+        function initHomeStep(){
         }
         function initSetupStep(){
             showCameraViewButtons(true);
             updateCameraView();
+            clearStatusArea();
+            setStatusAreaColor('black');
         }
         function initCalibrationStep(){
             updateCameraView([true,false]);
             updateCameraButtonView();
             showCameraViewButtons(false);
+            enablePrimaryActionButton(true);
         }
         function initPlacementStep(){
+            document.getElementById('first-placement-button').addEventListener('click',()=>{enableSecondPlacement(true);},false);
+            document.getElementById('second-placement-button').addEventListener('click',()=>{hidePlacementButtons(); showSwapButton(); enablePrimaryActionButton(true);},false);
+            enableSecondPlacement(false);
             showCameraViewButtons(true);
             updateCameraView();
             enablePrimaryActionButton(false);
-            document.getElementById('first-placement-button').addEventListener('click',enableSecondPlacement,true);
-            document.getElementById('second-placement-button').addEventListener('click',()=>{enablePrimaryActionButton(true);},true);
         }
         function initSafetyStep(){
-
+            enablePrimaryActionButton(false);
+            document.getElementsByClassName('safety-step-text')[0].style.display = "flex";
+            document.getElementsByClassName('safety-step-button')[0].style.display = "flex";
         }
+        var heartbeatInterval;
         function initTrialStep(){
-
+            showSwapButton();
+            startLaser(trialConfig);
+            let startTime = new Date();
+            let timesRun = 0;
+            heartbeatInterval = setInterval(function(){
+                timesRun += 1;
+                sendHeartBeat();
+                let elapsedTime = (new Date() - startTime) / 1000;
+                showTrialProgress(elapsedTime, trialConfig.duration);
+                if (elapsedTime > trialConfig.duration) {
+                    concludeTrial();
+                }
+            }, 50);
+            document.getElementById('primary-action-button').addEventListener('click',stopTrialManually,false);
         }
         var currentStep = 'home';        
 
         var discoSteps = {
             'home':{
                 'title':'Welcome to the Disco!',
-                'instructions':'Select a prior trial from the list below to review and send, or start a new trial by choosing Trial Setup.',
+                'instructions':'Select a prior trial to review or send, or start a new trial by choosing New Trial.',
                 'view':'completed-trials-view',
                 'content':'',
-                'actionButtonText':'Trial Setup',
+                'actionButtonText':'New Trial',
                 'initialize':initHomeStep,
                 'previousStep':false,
                 'nextStep':'setup',
             },
             'setup':{
                 'title':'Trial Setup',
-                'instructions':'Select trial parameters.',
+                'instructions':'Load an existing profile or set new trial parameters.',
                 'view':'trial-setup-view',
                 'content':'',
                 'actionButtonText':'Calibration',
@@ -487,7 +624,11 @@
             'placement':{
                 'title':'Specimen Loading',
                 'instructions':'',
-                'content':'',
+                'content':
+                    `<div>
+                        <button id="first-placement-button" class="sub-step-button">Heated Target has been placed.</button>
+                        <button id="second-placement-button" class="sub-step-button" disabled="disabled">Unheated target has been placed.</button>
+                    </div>`,
                 'view':'target-data-view',
                 'actionButtonText':'Safety Checks',
                 'initialize':initPlacementStep,
@@ -497,21 +638,17 @@
             },
             'safety':{
                 'title':'Safety Checks',
-                'instructions':'This instrument uses a 300mW 808nm near-IR laser which is capable of causing permanent damage to they eye.',
+                'instructions':'This instrument uses a 500mW 808nm NIR laser that can permanently damage eyes.',
                 'view':'safety-check-view',
                 'content':'',
                 'actionButtonText':'START TRIAL',
                 'initialize':initSafetyStep,
                 'previousStep':'placement',
                 'nextStep':'trial',
-                // Checklist:
-                // All operators are using protective eyewear.
-                // The safety hood is in place.
-                // The experiment room is clearly marked on the outside to warn against entry by additional parties.
             },
             'trial':{
                 'title':'Trial in Progress',
-                'instructions':'Press "STOP TRIAL" at any time to end the current trial and turn off the laser.',
+                'instructions':'Press "STOP TRIAL" to turn off the laser.',
                 'view':'target-data-view',
                 'content':'',
                 'actionButtonText':'STOP TRIAL',
@@ -522,6 +659,7 @@
         }
 
         function initializeAppUI(){
+
             // Button 0 = Visual, Button 1 = Thermal
             cameraViewState = [false, false];
             pushCameraViewButton(0);
@@ -529,10 +667,52 @@
             setStep('home');
             enablePrimaryActionButton(true);
 
-            document.getElementById('visual-button').addEventListener('click', ()=>{pushCameraViewButton(0);}, true);
-            document.getElementById('thermal-button').addEventListener('click', ()=>{pushCameraViewButton(1);}, true);
-            document.getElementById('primary-action-button').addEventListener('click', pushActionButton, true);
-            document.getElementById('secondary-action-button').addEventListener('click', pushBackButton, true);
+            document.getElementById('visual-button').addEventListener('click', ()=>{pushCameraViewButton(0);}, false);
+            document.getElementById('thermal-button').addEventListener('click', ()=>{pushCameraViewButton(1);}, false);
+            document.getElementById('primary-action-button').addEventListener('click', pushActionButton, false);
+            document.getElementById('secondary-action-button').addEventListener('click', pushBackButton, false);
+
+            // One-time initialization for steps:
+
+            // home
+            listenForPastTrialInputChange();
+            document.getElementById('upload-trial-button').addEventListener('click', uploadTrial, false);
+            document.getElementById('review-trial-button').addEventListener('click', reviewTrialMetadata, false);
+
+            // setup
+            listenForConfigFileInputChange();
+            document.getElementById('load-profile-button').addEventListener('click',()=>{document.getElementById('past-profile-input').click();}, false);
+
+            // calibration
+            document.getElementById('calibrate-button').addEventListener('click',()=>{calibrateSystem();},false);
+
+            // placement
+            document.getElementById('swap-target-button').addEventListener('click',swapHeated,false);
+
+            // safety
+            var safetyStepsCompleted = document.getElementsByClassName('completed-safety-step');
+            var safetyStepTexts = document.getElementsByClassName('safety-step-text');
+            var safetyStepButtons = document.getElementsByClassName('safety-step-button');
+            for (let i = 0; i < safetyStepTexts.length; i++) {
+                safetyStepsCompleted[i].style.display = "none";
+                safetyStepTexts[i].style.display = "none";
+                safetyStepButtons[i].style.display = "none";
+
+                safetyStepButtons[i].addEventListener('click',()=>{
+                    safetyStepTexts[i].style.display = "none";
+                    safetyStepButtons[i].style.display = "none";
+                    safetyStepsCompleted[i].style.display = "flex";
+                    if(i < safetyStepTexts.length - 1){
+                        safetyStepTexts[i+1].style.display = "flex";
+                        safetyStepButtons[i+1].style.display = "flex";
+                    } else {
+                        enablePrimaryActionButton(true);
+                    }
+                },false);
+            }
+
+            //trial
+
 
         }
         initializeAppUI();
@@ -553,6 +733,7 @@
             }
         }
 
+
 // SYNCHRONIZATION
 
         function refreshCameraImages(){
@@ -570,10 +751,28 @@
 
 //********************************************************************
 // BACKEND INTERFACE FUNCTIONS ********* IMPLEMENT THIS!!!************
-        
 
+        function calibrateSystem(){
 
-        
+        }
+        function getTargetInfo(){ // temps and positions
+
+        }
+        function swapHeated(){
+
+        }
+        // config is a JSON object containing (at least) duration, temp, and power.
+        // power is a percentage between 0 and 100 with 100 representing the max
+        // power we allow the laser to be set at
+        function startLaser(config){ 
+
+        }
+        function stopLaser(){
+
+        }
+        function sendHeartBeat(){
+
+        }
 
     </script>
 
