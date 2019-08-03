@@ -696,6 +696,7 @@
         }
         var heartbeatInterval;
         function initTrialStep(){
+            var trialDuration = trialConfig.duration > 0 ? 60 * trialConfigValues.duration[trialConfig.duration] : 60 * 60 * 24; 
             showSwapButton();
             startLaser(trialConfig, trialConfigValues);
             let startTime = new Date();
@@ -704,8 +705,8 @@
                 timesRun += 1;
                 sendHeartBeat();
                 let elapsedTime = (new Date() - startTime) / 1000;
-                showTrialProgress(elapsedTime, trialConfigValues.duration[trialConfig.duration]);
-                if (elapsedTime > trialConfigValues.duration[trialConfig.duration]) {
+                showTrialProgress(elapsedTime, trialDuration);
+                if (elapsedTime > trialDuration) {
                     concludeTrial();
                 }
             }, 50);
