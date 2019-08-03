@@ -232,6 +232,7 @@
                             <button id="load-profile-button" class="sub-step-button" style="margin-right:1em;">Load</button><button id="save-profile-button" class="sub-step-button">Save</button>
                         </div>
                         <input class="hidden" type="file" accept="*.json" id="past-profile-input"></input>
+                        <div class="hidden" id="past-trial-save-div"></div>
                     </div>
 
                     <div id="calibration-view"  class="view" style="width:100%; display:hidden; flex-direction:column; align-items:center;">
@@ -534,6 +535,17 @@
         function loadProfile(){ // also sets inputs
 
         }
+        function saveProfile(){
+            let date = new Date();
+            let dateString = (
+                date.getFullYear() + String(new Date()).split(' ')[1] + ("0" + date.getMonth()).slice(-2) + '_'+
+                ("0" + date.getHours()).slice(-2) + "-" + ("0" + date.getMinutes()).slice(-2) + "-" + ("0" + date.getSeconds()).slice(-2));
+            var profileData = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({"options":trialConfigValues, "selections":trialConfig,}));
+            let profileJSON = JSON.stringify({"options":trialConfigValues, "selections":trialConfig,}, null, 1);
+            let saveProfileEl = document.getElementById('past-trial-save-div');
+            saveProfileEl.innerHTML = '<a id="save-profile-link" href="data:' + profileData + '" download="settings'+dateString+'.json">download JSON</a>';
+            document.getElementById('save-profile-link').click();
+        }
         function readSetupInputs(){
             let profileObj = {};
             return profileObj;
@@ -628,7 +640,9 @@
             document.getElementById('setup-duration-display').innerText = durationString;
             document.getElementById('setup-duration-cur-val').innerText = durationString;
 
-            let tempString = trialConfig.temperature == "11" ? "max possible" : trialConfigValues.temperature[trialConfig.temperature] + '&#8451;';
+            let tempString = "unheated";
+            if (trialConfig.temperature == trialConfigValues.temperature.length - 1) {tempString = "max possible";}
+            else if (trialConfig.temperature > 0) {tempString = trialConfigValues.temperature[trialConfig.temperature] + '&#8451;';}
             document.getElementById('setup-temperature-display').innerHTML = tempString;
             document.getElementById('setup-temperature-cur-val').innerHTML = tempString;
 
@@ -816,6 +830,8 @@
             // setup
             listenForConfigFileInputChange();
             document.getElementById('load-profile-button').addEventListener('click',()=>{document.getElementById('past-profile-input').click();}, false);
+            document.getElementById('save-profile-button').addEventListener('click',saveProfile, false);
+                // show / hide config entry fields
             let setupData = document.getElementsByClassName('setup-datum');
             for (let i = 0; i < setupData.length; i++) {
                 if (! setupData[i].classList.contains('disabled-datum')) {
@@ -824,6 +840,7 @@
                     },false);
                 }
             }
+                // Add plus / minus button handlers
             let entries = document.getElementsByClassName('setup-datum-entry');
             for (let nodeIndex = 0; nodeIndex < entries.length; nodeIndex++) {
                 entries[nodeIndex].firstElementChild.addEventListener('click',(e)=>{
