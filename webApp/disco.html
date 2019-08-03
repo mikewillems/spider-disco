@@ -424,8 +424,7 @@
         // Pass in a dict to update data display for a particular target.
         // If useLonghand is true, use the DOM IDs for keys, else use the JS shorthand:
         function updateTargetDataDisplay(dataObj, useLonghand){
-            var dataIDs = {
-                "setU"  :"target-U-set-temp",
+            const dataIDs = {
                 "tempU" :"target-U-current-temp",
                 "xU"    :"target-U-x-pos",
                 "yU"    :"target-U-y-pos",
@@ -714,7 +713,7 @@
         }
         var currentStep = 'home';        
 
-        var discoSteps = {
+        const discoSteps = {
             'home':{
                 'title':'Welcome to the Disco!',
                 'instructions':'Select a prior trial to review or send, or start a new trial by choosing New Trial.',
@@ -912,12 +911,13 @@
         function calibrateSystem(){
             // take this out? requests some alignment image to check that coordinates are overlapped? 
             // I think that would be useful to make sure nothing is awry and allow user calibration.
+            // maybe calibration.png or something
         }
         function getTargetInfo(){ // temps and positions
-
+            // reads from file
         }
         function swapHeated(){
-
+            
         }
         // config is a JSON object containing (at least) duration, temp, and power.
         // power is a percentage between 0 and 100 with 100 representing the max
