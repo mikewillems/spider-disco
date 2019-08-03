@@ -174,7 +174,7 @@
                                 Duration
                             </div>
                             <div class="setup-datum-value" id="setup-duration-display">
-                                manual (max)
+                                manual stop
                             </div>
                             <div class="entry-anchor">
                                 <div class="setup-datum-entry hidden" id="setup-duration-entry">
@@ -188,8 +188,8 @@
                             <div class="setup-datum-title">
                                 Max Power
                             </div>
-                            <div class="setup-datum-value" id="setup-max-power-display">
-                                100.0
+                            <div class="setup-datum-value" id="setup-power-display">
+                                off
                             </div>
                             <div class="entry-anchor">
                                 <div class="setup-datum-entry hidden" id="setup-power-entry">
@@ -199,18 +199,18 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="temp-datum" class="setup-datum">
+                        <div id="temperature-datum" class="setup-datum">
                             <div class="setup-datum-title">
                                 Target Set Temp Delta
                             </div>
-                            <div class="setup-datum-value" id="setup-temp-delta-display">
-                                12&#8451;
+                            <div class="setup-datum-value" id="setup-temperature-display">
+                                unheated
                             </div>
                             <div class="entry-anchor">
-                                <div class="setup-datum-entry hidden" id="setup-temp-entry">
-                                    <button id="temp-decrement-button" class="plus-minus-button">-</button>
-                                    <span id="setup-temp-cur-val" class="setup-entry-cur-val"></span>
-                                    <button id="temp-increment-button" class="plus-minus-button">+</button>
+                                <div class="setup-datum-entry hidden" id="setup-temperature-entry">
+                                    <button id="temperature-decrement-button" class="plus-minus-button">-</button>
+                                    <span id="setup-temperature-cur-val" class="setup-entry-cur-val"></span>
+                                    <button id="temperature-increment-button" class="plus-minus-button">+</button>
                                 </div>
                             </div>
                         </div>
@@ -337,7 +337,7 @@
         function updateCameraButtonView(){
             var camViewSelectButtons = document.getElementsByClassName('cam-select-button');
             var camViewSelectButton;
-            for (var cameraViewStateIndex in cameraViewState){
+            for (let cameraViewStateIndex in cameraViewState){
                 camViewSelectButton = camViewSelectButtons[cameraViewStateIndex];
                 if(cameraViewState[cameraViewStateIndex]){
                     camViewSelectButton.classList.add('pressed-cam-select-button');
@@ -436,7 +436,7 @@
                 "yH"    :"target-H-y-pos",
                 "movedH":"target-H-distance-moved",
             };
-            for (var key in dataObj){
+            for (let key in dataObj){
                 let targetId = useLonghand ? key : dataIDs[key];
                 let val = dataObj[key];
                 if(val) document.getElementById(targetId).innerHTML = val;
@@ -486,7 +486,7 @@
         function setStep(stepKey) {
             if(stepKey){
                 var hiddenElements = document.getElementsByClassName('hidden');
-                for( let i = 0; i < hiddenElements.length; i++) {
+                for (let i = 0; i < hiddenElements.length; i++) {
                     hiddenElements[i].style.display = "none";
                 }
                 var prevStepObj = discoSteps[currentStep];
@@ -584,14 +584,9 @@
         function pickExistingProfile(){
             document.getElementById('past-profile-input').click();
         }
-        var trialConfig = {
-            'duration':10,
-            'tempDelta':0,
-            'power':100,
-        };
         function toggleSetupEntryDisplay(datumId){
-            let datum = document.getElementById(datumId);
-            let entry = datum.querySelectorAll('.setup-datum-entry')[0];
+            let param = datumId.split('-')[0];
+            let entry = document.getElementById('setup-'+param+'-entry');
             if (entry.style.display === "none") {
                 let allEntries = document.getElementsByClassName('setup-datum-entry');
                 for (let i = 0; i < allEntries.length; i++) {
@@ -608,14 +603,47 @@
                     }
                 }, 'false');
                 entry.style.display = "flex";
-                entry.querySelectorAll('.setup-entry-cur-val')[0].innerText = datum.querySelectorAll('.setup-datum-value')[0].innerText;
+                updateSettingsDisplay();
             } else {
                 entry.style.display = "none";
-                let newVal = entry.querySelectorAll('.setup-entry-cur-val')[0].innerText;
-                datum.querySelectorAll('.setup-datum-value')[0].innerText = newVal;
-                setProfile(readSetupInputs);
             }
         }
+        function updateSettingsDisplay() {
+            // button logic
+            for (let key in trialConfig) {
+                let valIndex = trialConfig[key];
+                let val = trialConfigValues[key][valIndex];
+                if(valIndex > 0) {
+                    document.getElementById(key+'-decrement-button').removeAttribute('disabled');
+                } else {
+                    document.getElementById(key+'-decrement-button').setAttribute('disabled', '');
+                }
+                if(valIndex < trialConfigValues[key].length - 1) {
+                    document.getElementById(key+'-increment-button').removeAttribute('disabled');
+                } else {
+                    document.getElementById(key+'-increment-button').setAttribute('disabled', '');
+                }
+            }
+            
+            // text formatting
+            let durationString = trialConfig.duration == 0 ? "manual stop" : trialConfigValues.duration[trialConfig.duration] + " min";
+            document.getElementById('setup-duration-display').innerText = durationString;
+            document.getElementById('setup-duration-cur-val').innerText = durationString;
+
+            let tempString = trialConfig.temperature == "11" ? "max possible" : trialConfigValues.temperature[trialConfig.temperature] + '&#8451;';
+            document.getElementById('setup-temperature-display').innerHTML = tempString;
+            document.getElementById('setup-temperature-cur-val').innerHTML = tempString;
+
+            let powString = trialConfig.power == 0 ? "off" : trialConfigValues.power[trialConfig.power] + "%";
+            document.getElementById('setup-power-display').innerText = powString;
+            document.getElementById('setup-power-cur-val').innerText = powString;
+
+            let ambString = trialConfig.ambient == 0 ? "disabled" : trialConfigValues.ambient[trialConfig.ambient] + '&#8451;';
+            document.getElementById('setup-ambient-display').innerHTML = ambString;
+            document.getElementById('setup-ambient-cur-val').innerHTML = ambString;
+
+        }
+
         function stopTrialManually(){
             stopLaser();
             clearInterval(heartbeatInterval);
@@ -669,15 +697,15 @@
         var heartbeatInterval;
         function initTrialStep(){
             showSwapButton();
-            startLaser(trialConfig);
+            startLaser(trialConfig, trialConfigValues);
             let startTime = new Date();
             let timesRun = 0;
             heartbeatInterval = setInterval(function(){
                 timesRun += 1;
                 sendHeartBeat();
                 let elapsedTime = (new Date() - startTime) / 1000;
-                showTrialProgress(elapsedTime, trialConfig.duration);
-                if (elapsedTime > trialConfig.duration) {
+                showTrialProgress(elapsedTime, trialConfigValues.duration[trialConfig.duration]);
+                if (elapsedTime > trialConfigValues.duration[trialConfig.duration]) {
                     concludeTrial();
                 }
             }, 50);
@@ -752,6 +780,18 @@
                 'nextStep':'home',
             },
         }
+        const trialConfigValues = {
+            'duration':[0,0.5,1,2,3,4,5,10,15,20,25,30],
+            'temperature':[0,1,2,3,4,5,6,7,8,9,10,11],
+            'power':[0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100],
+            'ambient':['disabled'],
+        }
+        var trialConfig = {
+            'duration':0,
+            'temperature':0,
+            'power':0,
+            'ambient':0,
+        };
 
         function initializeAppUI(){
 
@@ -784,6 +824,19 @@
                         toggleSetupEntryDisplay(setupData[i].id);
                     },false);
                 }
+            }
+            let entries = document.getElementsByClassName('setup-datum-entry');
+            for (let nodeIndex = 0; nodeIndex < entries.length; nodeIndex++) {
+                entries[nodeIndex].firstElementChild.addEventListener('click',(e)=>{
+                    e.stopPropagation();
+                    trialConfig[entries[nodeIndex].id.split('-')[1]] -= 1;
+                    updateSettingsDisplay();
+                },true);
+                entries[nodeIndex].lastElementChild.addEventListener('click',(e)=>{
+                    e.stopPropagation();
+                    trialConfig[entries[nodeIndex].id.split('-')[1]] += 1;
+                    updateSettingsDisplay();
+                },true);
             }
 
             // calibration
