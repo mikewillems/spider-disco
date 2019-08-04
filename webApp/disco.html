@@ -527,13 +527,35 @@
         }
         
         function setProfile(profileObj) {
-            trialConfig = profileObj;
-        }
-        function parseProfileJSON(jsonString) {
-            
-        }
-        function loadProfile(){ // also sets inputs
-
+            let loadedOptionKeys = Object.keys(profileObj.options);
+            for (let loadedOptionKeyIndex in loadedOptionKeys) {
+                let loadedOptionKey = loadedOptionKeys[loadedOptionKeyIndex];
+                if (Object.keys(trialConfigValues).indexOf(loadedOptionKey) < 0) {
+                    setStatusAreaColor('yellow');
+                    setStatusAreaText('Warning: the loaded object contains additional, unused settings or values. This may indicate a malformed settings file.');
+                } else {
+                    trialConfigValues[loadedOptionKey] = profileObj.options[loadedOptionKey];
+                }
+            }
+            let trialConfigOptionKeys = Object.keys(trialConfigValues);
+            for (let optionKeyIndex in trialConfigOptionKeys) {
+                let currOptionKey = trialConfigOptionKeys[optionKeyIndex];
+                if (Object.keys(profileObj.options).indexOf(currOptionKey) < 0) {
+                    setStatusAreaColor('yellow');
+                    setStatusAreaText('Warning: the loaded object contains only a subset of active config settings. This may indicate a malformed settings file.');
+                }
+            }
+            let trialConfigKeys = Object.keys(trialConfig);
+            for (let selectionKeyIndex in trialConfigKeys) {
+                let selectionKey = trialConfigKeys[selectionKeyIndex];
+                if (profileObj.selections[selectionKey] < 0 || profileObj.selections[selectionKey] > trialConfigValues[selectionKey].length - 1) {
+                    setStatusAreaColor("orange");
+                    setStatusAreaText("Loaded profile contained trial setting selections incompatible with its saved options. These were omitted.");
+                } else {
+                    trialConfig[selectionKey] = profileObj.selections[selectionKey];
+                }
+            }
+            updateSettingsDisplay();
         }
         function saveProfile(){
             let date = new Date();
@@ -545,10 +567,6 @@
             let saveProfileEl = document.getElementById('past-trial-save-div');
             saveProfileEl.innerHTML = '<a id="save-profile-link" href="data:' + profileData + '" download="settings'+dateString+'.json">download JSON</a>';
             document.getElementById('save-profile-link').click();
-        }
-        function readSetupInputs(){
-            let profileObj = {};
-            return profileObj;
         }
         var priorTrialName = "";
         var priorTrialContent = "";
@@ -579,14 +597,14 @@
             `;
             setContent(trialDetailsHTML);
         }
-        function listenForConfigFileInputChange(){
+        function listenForTestProfileFileInputChange(){
             var pastProfileInput = document.getElementById('past-profile-input');
             pastProfileInput.addEventListener('change', function (e) { 
                 var pastProfileFile = pastProfileInput.files[0];
                 let selectedProfileName = pastProfileFile.name; 
                 var fileReader = new FileReader();
                 fileReader.onload = function (e) { 
-                    setProfile(parseProfileJSON(fileReader.result)); 
+                    setProfile(JSON.parse(fileReader.result)); 
                 }
                 fileReader.readAsText(pastProfileFile);
             }, false);
@@ -828,7 +846,7 @@
             document.getElementById('review-trial-button').addEventListener('click', reviewTrialMetadata, false);
 
             // setup
-            listenForConfigFileInputChange();
+            listenForTestProfileFileInputChange();
             document.getElementById('load-profile-button').addEventListener('click',()=>{document.getElementById('past-profile-input').click();}, false);
             document.getElementById('save-profile-button').addEventListener('click',saveProfile, false);
                 // show / hide config entry fields
