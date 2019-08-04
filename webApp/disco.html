@@ -304,12 +304,136 @@
 
     <script type="text/javascript">
 
+// GLOBAL DATA MEMBERS
+
+        // CONTROL & STATUS
+        var STATUS = {};
+        var INSTRUMENT_CONFIG = {
+            timeOutMs: 100,
+        }
+        //not yet used:
+        var TRIAL_SETTINGS = {
+            duration:{
+                options:[0,0.5,1,2,3,4,5,10,15,20,25,30],
+                setting:0,
+            },
+            temperature:{
+                options:[0,1,2,3,4,5,6,7,8,9,10,11],
+                setting:0,
+            },
+            power:{
+                options:[0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100],
+                setting:0,
+            },
+            ambient:{
+                options:['disabled'],
+                setting:0,
+            }
+
+        };
+        // still used:
+        const trialConfigValues = {
+            'duration':[0,0.5,1,2,3,4,5,10,15,20,25,30],
+            'temperature':[0,1,2,3,4,5,6,7,8,9,10,11],
+            'power':[0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100],
+            'ambient':['disabled'],
+        }
+        var trialConfig = {
+            'duration':0,
+            'temperature':0,
+            'power':0,
+            'ambient':0,
+        };
+
+        // GUI SPECIFIC
+        var DISPLAY_STATE = {
+            currentStep: 'home',
+            cameraViewState: [false, false],
+        }
+        const discoSteps = {
+            'home':{
+                'title':'Welcome to the Disco!',
+                'instructions':'Select a prior trial to review or send, or start a new trial by choosing New Trial.',
+                'view':'completed-trials-view',
+                'content':'',
+                'actionButtonText':'New Trial',
+                'initialize':initHomeStep,
+                'previousStep':false,
+                'nextStep':'setup',
+            },
+            'setup':{
+                'title':'Trial Setup',
+                'instructions':'Load an existing profile or set new trial parameters.',
+                'view':'trial-setup-view',
+                'content':'',
+                'actionButtonText':'Calibration',
+                'initialize':initSetupStep,
+                'previousStep':'home',
+                'nextStep':'calibration',
+            },
+            'calibration':{
+                'title':'Calibration',
+                'instructions':'Place the calibration tool in the center of the arena, then position the disco machine so that the entire arena floor is unobscured in the mask to the left.',
+                'view':'calibration-view',
+                'content':'',
+                'actionButtonText':'Specimen Loading',
+                'initialize':initCalibrationStep,
+                'previousStep':'setup',
+                'nextStep':'placement',
+            },
+            'placement':{
+                'title':'Specimen Loading',
+                'instructions':'',
+                'content':
+                    `<div>
+                        <button id="first-placement-button" class="sub-step-button">Heated Target has been placed.</button>
+                        <button id="second-placement-button" class="sub-step-button" disabled="disabled">Unheated target has been placed.</button>
+                    </div>`,
+                'view':'target-data-view',
+                'actionButtonText':'Safety Checks',
+                'initialize':initPlacementStep,
+                'previousStep':'calibration',
+                'nextStep':'safety',
+                // Individual sub-steps: Remove the calibration tool and place the specimen to be heated in the arena. Now place the unheated specimen in the arena.
+            },
+            'safety':{
+                'title':'Safety Checks',
+                'instructions':'This instrument uses a 500mW 808nm NIR laser that can permanently damage eyes.',
+                'view':'safety-check-view',
+                'content':'',
+                'actionButtonText':'START TRIAL',
+                'initialize':initSafetyStep,
+                'previousStep':'placement',
+                'nextStep':'trial',
+            },
+            'trial':{
+                'title':'Trial in Progress',
+                'instructions':'Press "STOP TRIAL" to turn off the laser.',
+                'view':'target-data-view',
+                'content':'',
+                'actionButtonText':'STOP TRIAL',
+                'initialize':initTrialStep,
+                'previousStep':false,
+                'nextStep':'home',
+            },
+        }
+        const dataIDs = {
+            "tempU" :"target-U-current-temp",
+            "xU"    :"target-U-x-pos",
+            "yU"    :"target-U-y-pos",
+            "movedU":"target-U-distance-moved",
+            "setH"  :"target-H-set-temp",
+            "tempH" :"target-H-current-temp",
+            "xH"    :"target-H-x-pos",
+            "yH"    :"target-H-y-pos",
+            "movedH":"target-H-distance-moved",
+        };
+
 // FRONT-END FUNCTIONS
 
         // Button 0 = Visible, Button 1 = Thermal
-        var cameraViewState = [false, false];
         function updateCameraView(customViewState){
-            let viewState = customViewState?customViewState:cameraViewState;
+            let viewState = customViewState?customViewState:DISPLAY_STATE.cameraViewState;
             let showVisible = viewState[0];
             let showThermal = viewState[1];
             let visibleCamElement = document.getElementById('visible-cam-output');
@@ -337,9 +461,9 @@
         function updateCameraButtonView(){
             var camViewSelectButtons = document.getElementsByClassName('cam-select-button');
             var camViewSelectButton;
-            for (let cameraViewStateIndex in cameraViewState){
+            for (let cameraViewStateIndex in DISPLAY_STATE.cameraViewState){
                 camViewSelectButton = camViewSelectButtons[cameraViewStateIndex];
-                if(cameraViewState[cameraViewStateIndex]){
+                if(DISPLAY_STATE.cameraViewState[cameraViewStateIndex]){
                     camViewSelectButton.classList.add('pressed-cam-select-button');
                 } else {
                     camViewSelectButton.classList.remove('pressed-cam-select-button');
@@ -352,8 +476,8 @@
         }
         function pushCameraViewButton(index){            
             // If at least one camera is selected after toggling the view that was pressed, toggles that camera's visibility and update buttons:
-            if(+!cameraViewState[index] + +cameraViewState[+!index]){
-                cameraViewState[index] = !cameraViewState[index];
+            if(+!DISPLAY_STATE.cameraViewState[index] + +DISPLAY_STATE.cameraViewState[+!index]){
+                DISPLAY_STATE.cameraViewState[index] = !DISPLAY_STATE.cameraViewState[index];
                 updateCameraView();
                 updateCameraButtonView();
             }
@@ -424,17 +548,6 @@
         // Pass in a dict to update data display for a particular target.
         // If useLonghand is true, use the DOM IDs for keys, else use the JS shorthand:
         function updateTargetDataDisplay(dataObj, useLonghand){
-            const dataIDs = {
-                "tempU" :"target-U-current-temp",
-                "xU"    :"target-U-x-pos",
-                "yU"    :"target-U-y-pos",
-                "movedU":"target-U-distance-moved",
-                "setH"  :"target-H-set-temp",
-                "tempH" :"target-H-current-temp",
-                "xH"    :"target-H-x-pos",
-                "yH"    :"target-H-y-pos",
-                "movedH":"target-H-distance-moved",
-            };
             for (let key in dataObj){
                 let targetId = useLonghand ? key : dataIDs[key];
                 let val = dataObj[key];
@@ -488,8 +601,8 @@
                 for (let i = 0; i < hiddenElements.length; i++) {
                     hiddenElements[i].style.display = "none";
                 }
-                var prevStepObj = discoSteps[currentStep];
-                currentStep = stepKey;
+                var prevStepObj = discoSteps[DISPLAY_STATE.currentStep];
+                DISPLAY_STATE.currentStep = stepKey;
                 var currentStepObj = discoSteps[stepKey];
                 setStepTitleText(currentStepObj.title);
                 setView(prevStepObj.view, currentStepObj.view);
@@ -497,6 +610,7 @@
                 setContent(currentStepObj.content);
                 setPrimaryActionButtonText(currentStepObj.actionButtonText);
                 enableBackButton(currentStepObj.previousStep);
+                updateStatus();
                 if(stepKey == 'trial') {
                     document.getElementById('right-arrow-span').innerHTML = '';
                 } else {
@@ -506,10 +620,10 @@
             }
         }
         function pushBackButton(){
-            setStep(discoSteps[currentStep].previousStep);
+            setStep(discoSteps[DISPLAY_STATE.currentStep].previousStep);
         }
         function pushActionButton(){;
-            setStep(discoSteps[currentStep].nextStep);
+            setStep(discoSteps[DISPLAY_STATE.currentStep].nextStep);
         }
         function enableSecondPlacement(isEnabled){
             if(isEnabled) {
@@ -525,23 +639,30 @@
         function showSwapButton(){
             document.getElementById('swap-target-button').style.display = "block";
         }
-        
         function setProfile(profileObj) {
             let loadedOptionKeys = Object.keys(profileObj.options);
             for (let loadedOptionKeyIndex in loadedOptionKeys) {
                 let loadedOptionKey = loadedOptionKeys[loadedOptionKeyIndex];
                 if (Object.keys(trialConfigValues).indexOf(loadedOptionKey) < 0) {
-                    setStatusAreaColor('yellow');
+                    setStatusAreaColor('rgb(200,180,0)');
                     setStatusAreaText('Warning: the loaded object contains additional, unused settings or values. This may indicate a malformed settings file.');
                 } else {
                     trialConfigValues[loadedOptionKey] = profileObj.options[loadedOptionKey];
                 }
             }
+            let loadedSelectionKeys = Object.keys(profileObj.selections);
+            for (let loadedSelectionKeyIndex in loadedSelectionKeys) {
+                let loadedSelectionKey = loadedSelectionKeys[loadedSelectionKeyIndex];
+                if (Object.keys(trialConfig).indexOf(loadedSelectionKey) < 0) {
+                    setStatusAreaColor('rgb(200,180,0)');
+                    setStatusAreaText('Warning: the loaded object contains additional, unused settings or values. This may indicate a malformed settings file.');
+                } 
+            }
             let trialConfigOptionKeys = Object.keys(trialConfigValues);
             for (let optionKeyIndex in trialConfigOptionKeys) {
                 let currOptionKey = trialConfigOptionKeys[optionKeyIndex];
-                if (Object.keys(profileObj.options).indexOf(currOptionKey) < 0) {
-                    setStatusAreaColor('yellow');
+                if (Object.keys(profileObj.options).indexOf(currOptionKey) < 0 || Object.keys(trialConfig).indexOf(currOptionKey) < 0) {
+                    setStatusAreaColor('rgb(200,180,0)');
                     setStatusAreaText('Warning: the loaded object contains only a subset of active config settings. This may indicate a malformed settings file.');
                 }
             }
@@ -673,13 +794,12 @@
             document.getElementById('setup-ambient-cur-val').innerHTML = ambString;
 
         }
-
         function stopTrialManually(){
             stopLaser();
             clearInterval(heartbeatInterval);
             clearStatusArea();
             document.getElementById('primary-action-button').removeEventListener('click', stopTrialManually);
-            setStatusAreaText('Trial stopped manually.');
+            setStatusAreaText('Trial stopped manually at '+getTimeStamp(elapsedTime)+'.');
             setStatusAreaColor('purple');
         }
         function concludeTrial(){
@@ -725,7 +845,9 @@
             document.getElementsByClassName('safety-step-button')[0].style.display = "flex";
         }
         var heartbeatInterval;
+        var elapsedTime = 0;
         function initTrialStep(){
+            elapsedTime = 0;
             var trialDuration = trialConfig.duration > 0 ? 60 * trialConfigValues.duration[trialConfig.duration] : 60 * 60 * 24; 
             showSwapButton();
             startLaser(trialConfig, trialConfigValues);
@@ -734,7 +856,7 @@
             heartbeatInterval = setInterval(function(){
                 timesRun += 1;
                 sendHeartBeat();
-                let elapsedTime = (new Date() - startTime) / 1000;
+                elapsedTime = (new Date() - startTime) / 1000;
                 showTrialProgress(elapsedTime, trialDuration);
                 if (elapsedTime > trialDuration) {
                     concludeTrial();
@@ -742,92 +864,10 @@
             }, 50);
             document.getElementById('primary-action-button').addEventListener('click',stopTrialManually,false);
         }
-        var currentStep = 'home';        
-
-        const discoSteps = {
-            'home':{
-                'title':'Welcome to the Disco!',
-                'instructions':'Select a prior trial to review or send, or start a new trial by choosing New Trial.',
-                'view':'completed-trials-view',
-                'content':'',
-                'actionButtonText':'New Trial',
-                'initialize':initHomeStep,
-                'previousStep':false,
-                'nextStep':'setup',
-            },
-            'setup':{
-                'title':'Trial Setup',
-                'instructions':'Load an existing profile or set new trial parameters.',
-                'view':'trial-setup-view',
-                'content':'',
-                'actionButtonText':'Calibration',
-                'initialize':initSetupStep,
-                'previousStep':'home',
-                'nextStep':'calibration',
-            },
-            'calibration':{
-                'title':'Calibration',
-                'instructions':'Place the calibration tool in the center of the arena, then position the disco machine so that the entire arena floor is unobscured in the mask to the left.',
-                'view':'calibration-view',
-                'content':'',
-                'actionButtonText':'Specimen Loading',
-                'initialize':initCalibrationStep,
-                'previousStep':'setup',
-                'nextStep':'placement',
-            },
-            'placement':{
-                'title':'Specimen Loading',
-                'instructions':'',
-                'content':
-                    `<div>
-                        <button id="first-placement-button" class="sub-step-button">Heated Target has been placed.</button>
-                        <button id="second-placement-button" class="sub-step-button" disabled="disabled">Unheated target has been placed.</button>
-                    </div>`,
-                'view':'target-data-view',
-                'actionButtonText':'Safety Checks',
-                'initialize':initPlacementStep,
-                'previousStep':'calibration',
-                'nextStep':'safety',
-                // Individual sub-steps: Remove the calibration tool and place the specimen to be heated in the arena. Now place the unheated specimen in the arena.
-            },
-            'safety':{
-                'title':'Safety Checks',
-                'instructions':'This instrument uses a 500mW 808nm NIR laser that can permanently damage eyes.',
-                'view':'safety-check-view',
-                'content':'',
-                'actionButtonText':'START TRIAL',
-                'initialize':initSafetyStep,
-                'previousStep':'placement',
-                'nextStep':'trial',
-            },
-            'trial':{
-                'title':'Trial in Progress',
-                'instructions':'Press "STOP TRIAL" to turn off the laser.',
-                'view':'target-data-view',
-                'content':'',
-                'actionButtonText':'STOP TRIAL',
-                'initialize':initTrialStep,
-                'previousStep':false,
-                'nextStep':'home',
-            },
-        }
-        const trialConfigValues = {
-            'duration':[0,0.5,1,2,3,4,5,10,15,20,25,30],
-            'temperature':[0,1,2,3,4,5,6,7,8,9,10,11],
-            'power':[0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100],
-            'ambient':['disabled'],
-        }
-        var trialConfig = {
-            'duration':0,
-            'temperature':0,
-            'power':0,
-            'ambient':0,
-        };
-
         function initializeAppUI(){
 
             // Button 0 = visible, Button 1 = Thermal
-            cameraViewState = [false, false];
+            DISPLAY_STATE.cameraViewState = [false, false];
             pushCameraViewButton(0);
             pushCameraViewButton(1);
             setStep('home');
@@ -932,12 +972,16 @@
             document.getElementById('thermal-cam-output').src = 'thermal_cam_output.png?'+randNum;
         }
         setInterval(refreshCameraImages, 500);
+        
 
-// HARDWARE INTERFACE FUNCTIONS
-    
-        function laserIsArmed() {
-            // Implement with feedback from DISARM signal
+        function updateStatus(){
+            let status = pollStatus();
+            let armed = status.isArmed;
+            let alive = status.isAlive;
+            let isConnectedToPC = (new Date().getTime() - status.time) < INSTRUMENT_CONFIG.timeoutMilSec;
         }
+        setInterval(updateStatus, 250);
+
 
 //********************************************************************
 // BACKEND INTERFACE FUNCTIONS ********* IMPLEMENT THIS!!!************
@@ -971,6 +1015,14 @@
                 PC connected - looks for a return signal and checks time stamp - delay > threshold counts as disconnect)
                 Recording minutes left (approximate, erring on low side, if diskSpace not given in these units)
             */
+            return {
+                isArmed: "true",
+                isAlive: "true",
+                remoteEnabled: "true",
+                time: new Date().getTime() - 75,
+                diskSpace: 400,
+            }
+            
         }
         function sendConfigFile(){
             // sends every time it's changed
