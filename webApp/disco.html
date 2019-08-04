@@ -308,8 +308,10 @@
 
         // CONTROL & STATUS
         var STATUS = {};
-        var INSTRUMENT_CONFIG = {
+        var INSTRUMENT_CONTROL = {
             timeOutMs: 100,
+            heartbeatInterval: null,
+            elapsedTime: 0,
         }
         //not yet used:
         var TRIAL_SETTINGS = {
@@ -681,7 +683,7 @@
         function saveProfile(){
             let date = new Date();
             let dateString = (
-                date.getFullYear() + String(new Date()).split(' ')[1] + ("0" + date.getMonth()).slice(-2) + '_'+
+                date.getFullYear() + String(new Date()).split(' ')[1] + ("0" + date.getDate()).slice(-2) + '_'+
                 ("0" + date.getHours()).slice(-2) + "-" + ("0" + date.getMinutes()).slice(-2) + "-" + ("0" + date.getSeconds()).slice(-2));
             var profileData = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({"options":trialConfigValues, "selections":trialConfig,}));
             let profileJSON = JSON.stringify({"options":trialConfigValues, "selections":trialConfig,}, null, 1);
@@ -796,10 +798,10 @@
         }
         function stopTrialManually(){
             stopLaser();
-            clearInterval(heartbeatInterval);
+            clearInterval(INSTRUMENT_CONTROL.heartbeatInterval);
             clearStatusArea();
             document.getElementById('primary-action-button').removeEventListener('click', stopTrialManually);
-            setStatusAreaText('Trial stopped manually at '+getTimeStamp(elapsedTime)+'.');
+            setStatusAreaText('Trial stopped manually at '+getTimeStamp(INSTRUMENT_CONTROL.elapsedTime)+'.');
             setStatusAreaColor('purple');
         }
         function concludeTrial(){
@@ -810,7 +812,7 @@
         }
         function terminateTrialWithError(errorMessage){
             stopLaser();
-            clearInterval(heartbeatInterval);
+            clearInterval(INSTRUMENT_CONTROL.heartbeatInterval);
             clearStatusArea();
             document.getElementById('primary-action-button').removeEventListener('click', stopTrialManually);
             setStatusAreaText('Trial terminated due to error: '+errorMessage);
@@ -844,21 +846,20 @@
             document.getElementsByClassName('safety-step-text')[0].style.display = "flex";
             document.getElementsByClassName('safety-step-button')[0].style.display = "flex";
         }
-        var heartbeatInterval;
-        var elapsedTime = 0;
         function initTrialStep(){
-            elapsedTime = 0;
+            INSTRUMENT_CONTROL.elapsedTime = 0;
+            // Convert from minutes to seconds and account for manually stopped trial:
             var trialDuration = trialConfig.duration > 0 ? 60 * trialConfigValues.duration[trialConfig.duration] : 60 * 60 * 24; 
             showSwapButton();
             startLaser(trialConfig, trialConfigValues);
             let startTime = new Date();
             let timesRun = 0;
-            heartbeatInterval = setInterval(function(){
+            INSTRUMENT_CONTROL.heartbeatInterval = setInterval(function(){
                 timesRun += 1;
                 sendHeartBeat();
-                elapsedTime = (new Date() - startTime) / 1000;
-                showTrialProgress(elapsedTime, trialDuration);
-                if (elapsedTime > trialDuration) {
+                INSTRUMENT_CONTROL.elapsedTime = (new Date() - startTime) / 1000;
+                showTrialProgress(INSTRUMENT_CONTROL.elapsedTime, trialDuration);
+                if (INSTRUMENT_CONTROL.elapsedTime > trialDuration) {
                     concludeTrial();
                 }
             }, 50);
@@ -978,13 +979,60 @@
             let status = pollStatus();
             let armed = status.isArmed;
             let alive = status.isAlive;
-            let isConnectedToPC = (new Date().getTime() - status.time) < INSTRUMENT_CONFIG.timeoutMilSec;
+            let isConnectedToPC = (new Date().getTime() - status.time) < INSTRUMENT_CONTROL.timeoutMilSec;
         }
         setInterval(updateStatus, 250);
 
 
 //********************************************************************
 // BACKEND INTERFACE FUNCTIONS ********* IMPLEMENT THIS!!!************
+
+        const BACKEND_SETTINGS = {
+            ip:'',
+            port:'',
+        }
+
+        /*
+        commands: START_LASER, STOP_LASER, CALIBRATE_SYSTEM, SWAP_TARGETS, BEAT
+        requests: GET_TARGET_INFO, GET_STATUS
+        */
+
+        function sendCommand(command) {
+            let responded = false;
+            setTimeout (()=> {
+                setDisconnectedStatus();
+            }, INSTRUMENT_CONTROL.timeoutMilSec);
+            fetch(ip+':'+port+'/commands/'+command)
+            .then(function(response) {
+                responded = true;
+                let resp = response.json();
+                if (resp == "200") {
+                    // OK
+                    setStatusAreaText("Command issued successfully.");
+                    setStatusAreaColor('green');
+                }
+                if (resp == "202") {
+                    // ACCEPTED
+                    setStatusAreaText("Command received, pending...");
+                    setStatusAreaColor('rgb(200,180,0)');
+                }
+                if (resp == "408") {
+                    // TIMEOUT
+                    setStatusAreaText("Command timed out, shutting down laser.");
+                    setStatusAreaColor('red');
+                }
+                if (resp == "500") {
+                    // INTERNAL SERVER ERROR
+                    setStatusAreaText("Server error, shutting down laser.");
+                    setStatusAreaColor('red');
+                }
+                if (resp == "503") {
+                    // SERVICE UNAVAILABLE
+                    setStatusAreaText("Service unavailable, shutting down laser.");
+                    setStatusAreaColor('red');
+                }
+            });
+        }
 
         function calibrateSystem(){
             // take this out? requests some alignment image to check that coordinates are overlapped? 
@@ -1019,7 +1067,7 @@
                 isArmed: "true",
                 isAlive: "true",
                 remoteEnabled: "true",
-                time: new Date().getTime() - 75,
+                time: new Date().getTime() - 75, // for example, testing with a 75 ms latency
                 diskSpace: 400,
             }
             
