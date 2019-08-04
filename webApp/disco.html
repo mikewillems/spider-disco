@@ -307,11 +307,26 @@
 // GLOBAL DATA MEMBERS
 
         // CONTROL & STATUS
-        var STATUS = {};
+        var STATUS = {
+            isArmed: "",
+            isAlive: "",
+            remoteEnabled: "",
+            time: "",
+            diskSpace: -1,
+        };
         var INSTRUMENT_CONTROL = {
             timeOutMs: 100,
             heartbeatInterval: null,
             elapsedTime: 0,
+        }
+        var TARGET_INFO = {
+            positionU: ["",""],
+            uLastReported: -1, // UTC time (milsec of epoch)
+            tempU: "",
+            positionH: ["",""],
+            hLastReported: -1,
+            tempH: ["",""],
+            numTracksLastDetected: 0, // update with number of simultaneous tracks currently detected
         }
         //not yet used:
         var TRIAL_SETTINGS = {
@@ -995,6 +1010,16 @@
         /*
         commands: START_LASER, STOP_LASER, CALIBRATE_SYSTEM, SWAP_TARGETS, BEAT
         requests: GET_TARGET_INFO, GET_STATUS
+
+        var TARGET_INFO = {
+            positionU: ["",""],
+            uLastReported: -1, // UTC time (milsec of epoch)
+            tempU: "",
+            positionH: ["",""],
+            hLastReported: -1,
+            tempH: ["",""],
+            numTracksLastDetected: 0, // update with number of simultaneous tracks currently detected
+        }
         */
 
         function sendCommand(command) {
@@ -1008,29 +1033,30 @@
                 let resp = response.json();
                 if (resp == "200") {
                     // OK
-                    setStatusAreaText("Command issued successfully.");
+                    setStatusAreaText(command + " command executed successfully.");
                     setStatusAreaColor('green');
                 }
                 if (resp == "202") {
                     // ACCEPTED
-                    setStatusAreaText("Command received, pending...");
+                    setStatusAreaText(command + " command received, pending...");
                     setStatusAreaColor('rgb(200,180,0)');
                 }
                 if (resp == "408") {
                     // TIMEOUT
-                    setStatusAreaText("Command timed out, shutting down laser.");
+                    setStatusAreaText(command + " command timed out.");
                     setStatusAreaColor('red');
                 }
                 if (resp == "500") {
                     // INTERNAL SERVER ERROR
-                    setStatusAreaText("Server error, shutting down laser.");
+                    setStatusAreaText("Server failure, failed to issue "+command+" command.");
                     setStatusAreaColor('red');
                 }
                 if (resp == "503") {
                     // SERVICE UNAVAILABLE
-                    setStatusAreaText("Service unavailable, shutting down laser.");
+                    setStatusAreaText("Service unavailable, failed to issue "+command+" command.");
                     setStatusAreaColor('red');
                 }
+                return resp;
             });
         }
 
@@ -1038,24 +1064,29 @@
             // take this out? requests some alignment image to check that coordinates are overlapped? 
             // I think that would be useful to make sure nothing is awry and allow user calibration.
             // maybe calibration.png or something
-        }
-        function getTargetInfo(){ // temps and positions
-            // reads from file
+            sendCommand("CALIBRATE_SYSTEM");
         }
         function swapHeated(){
-            
+            sendCommand("SWAP_TARGETS");
         }
         // config is a JSON object containing (at least) duration, temp, and power.
         // power is a percentage between 0 and 100 with 100 representing the max
         // power we allow the laser to be set at
         function startLaser(configIndices, configOptions){ 
-
+            sendCommand("START_LASER");
+            displayLaserActiveWarning();
         }
         function stopLaser(){
-
+            sendCommand("STOP_LASER");
+            if (STATUS.isArmed) {
+                displayLaserArmedWarning();
+            } else clearPersistentAlerts();
         }
         function sendHeartBeat(){
-
+            sendCommand("BEAT");
+        }
+        function getTargetInfo(){ // temps, positions, timestamp, remoteEnabled, isAlive, diskSpace, numTargets
+            
         }
         function pollStatus(){
             // retrieves status from status file for isArmed, remoteIsEnabled, isAlive, diskSpace and timestamp.
@@ -1071,9 +1102,6 @@
                 diskSpace: 400,
             }
             
-        }
-        function sendConfigFile(){
-            // sends every time it's changed
         }
 
     </script>
