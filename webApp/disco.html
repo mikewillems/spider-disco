@@ -316,11 +316,21 @@
             remoteEnabled: "",
             timeLastAlive: "",
             diskSpace: -1,
-        };
-        var INSTRUMENT_CONTROL = {
-            timeOutMs: 100,
-            heartbeatInterval: null,
+            isConnected: false,
             elapsedTime: 0,
+        };
+        var TIMERS = {
+            heartbeatTimer: null,
+            statusUpdateTimer: null,
+            cameraUpdateTimer: null,
+        }
+        const SYSTEM_SETTINGS = {
+            timeoutMilSec: 1000,
+            heartbeatInterval: 50,
+            statusUpdateInterval: 500,
+            cameraUpdateInterval: 100,
+            ip: '',
+            port: '',
         }
         var TARGET_INFO = {
             positionU: ["",""],
@@ -633,7 +643,8 @@
                 setContent(currentStepObj.content);
                 setPrimaryActionButtonText(currentStepObj.actionButtonText);
                 enableBackButton(currentStepObj.previousStep);
-                updateStatus();
+                clearStatusArea();
+                setStatusAreaColor("black");
                 if(stepKey == 'trial') {
                     document.getElementById('right-arrow-span').innerHTML = '';
                 } else {
@@ -700,6 +711,15 @@
                 } else {
                     trialConfig[selectionKey] = profileObj.selections[selectionKey];
                 }
+            }
+            if (STATUS.diskSpace < trialConfigValues.duration[trialConfig.duration]) {
+                setStatusAreaColor('orange');
+                setStatusAreaText('Not enough disk space, duration must be ' + Math.floor(STATUS.diskSpace) + ' or less.');
+                trialConfig.duration = 0;
+                while(trialConfig.duration < trialConfigValues.duration.length - 2 && trialConfigValues.duration[trialConfig.duration + 1] < STATUS.diskSpace) {
+                    trialConfig.duration += 1;
+                }
+                return;
             }
             updateSettingsDisplay();
         }
@@ -783,7 +803,7 @@
             }
         }
         function updateSettingsDisplay() {
-            // button logic
+            // value range logic
             for (let key in trialConfig) {
                 let valIndex = trialConfig[key];
                 let val = trialConfigValues[key][valIndex];
@@ -797,6 +817,16 @@
                 } else {
                     document.getElementById(key+'-increment-button').setAttribute('disabled', '');
                 }
+            }
+                // check duration vs disk space
+            if (STATUS.isConnected && STATUS.diskSpace < 1 ) {
+                enableButton("primary-action-button", false);
+                setStatusAreaColor("orange");
+                setStatusAreaText("Disk is full. Please clear space before starting a new trial.");
+            } else if (STATUS.isConnected && trialConfig.duration < trialConfigValues.duration.length - 1 && 
+                    (trialConfigValues.duration[trialConfig.duration + 1] > STATUS.diskSpace || trialConfigValues.duration[trialConfig.duration] > STATUS.diskSpace)) {
+                enableButton("duration-increment-button", false);
+                setStatusAreaText('Only ' + Math.floor(STATUS.diskSpace) + ' minutes of disk space available.');
             }
             
             // text formatting
@@ -821,10 +851,10 @@
         }
         function stopTrialManually(){
             stopLaser();
-            clearInterval(INSTRUMENT_CONTROL.heartbeatInterval);
+            clearInterval(TIMERS.heartbeatTimer);
             clearStatusArea();
             document.getElementById('primary-action-button').removeEventListener('click', stopTrialManually);
-            setStatusAreaText('Trial stopped manually at '+getTimeStamp(INSTRUMENT_CONTROL.elapsedTime)+'.');
+            setStatusAreaText('Trial stopped manually at '+getTimeStamp(STATUS.elapsedTime)+'.');
             setStatusAreaColor('purple');
         }
         function concludeTrial(){
@@ -835,14 +865,11 @@
         }
         function terminateTrialWithError(errorMessage){
             stopLaser();
-            clearInterval(INSTRUMENT_CONTROL.heartbeatInterval);
+            clearInterval(TIMERS.heartbeatTimer);
             clearStatusArea();
             document.getElementById('primary-action-button').removeEventListener('click', stopTrialManually);
             setStatusAreaText('Trial terminated due to error: '+errorMessage);
             setStatusAreaColor('red');
-        }
-        function getConnectionStatus(){
-            return (new Date().getTime() - STATUS.timeLastAlive) < INSTRUMENT_CONTROL.timeoutMilSec;
         }
 
 
@@ -877,22 +904,40 @@
             document.getElementsByClassName('safety-step-button')[0].style.display = "flex";
         }
         function initTrialStep(){
-            INSTRUMENT_CONTROL.elapsedTime = 0;
+            if (!STATUS.isConnected) {
+                setStep('safety');
+                setStatusAreaColor('orange');
+                setStatusAreaText('Warning: PC is disconnected, cannot start trial!');
+                return;
+            }
+            else if (!STATUS.isArmed && trialConfig.temperature != 0) {
+                setStep('safety');
+                setStatusAreaColor('orange');
+                setStatusAreaText('Warning: laser is not armed, cannot perform heated trial!');
+                return;
+            } else if (STATUS.diskSpace < trialConfigValues.duration[trialConfig.duration]) {
+                setStep('setup');
+                setStatusAreaColor('orange');
+                setStatusAreaText('Not enough disk space, please select a duration less than ' + Math.floor(STATUS.diskSpace));
+                return;
+            }
+            STATUS.elapsedTime = 0;
             // Convert from minutes to seconds and account for manually stopped trial:
-            var trialDuration = trialConfig.duration > 0 ? 60 * trialConfigValues.duration[trialConfig.duration] : 60 * 60 * 24; 
+            var trialDurationSeconds = trialConfig.duration > 0 ? 60 * trialConfigValues.duration[trialConfig.duration] : 60 * 60 * 24; 
             showElement('swap-target-button', true);
             startLaser(trialConfig, trialConfigValues);
             let startTime = new Date();
             let timesRun = 0;
-            INSTRUMENT_CONTROL.heartbeatInterval = setInterval(function(){
+            TIMERS.heartbeatTimer = setInterval(function(){
                 timesRun += 1;
                 sendHeartBeat();
-                INSTRUMENT_CONTROL.elapsedTime = (new Date() - startTime) / 1000;
-                showTrialProgress(INSTRUMENT_CONTROL.elapsedTime, trialDuration);
-                if (INSTRUMENT_CONTROL.elapsedTime > trialDuration) {
+                STATUS.elapsedTime = (new Date() - startTime) / 1000;
+                showTrialProgress(STATUS.elapsedTime, trialDurationSeconds);
+                updateSystemStatus();
+                if (STATUS.elapsedTime > trialDurationSeconds) {
                     concludeTrial();
                 }
-            }, 50);
+            }, STATUS.heartbeatInterval);
             document.getElementById('primary-action-button').addEventListener('click',stopTrialManually,false);
         }
         function initializeAppUI(){
@@ -997,15 +1042,15 @@
 
 // SYNCHRONIZATION
 
-        function refreshCameraImages(){
+        function refreshCameraImages() {
             let randNum = Math.floor(Math.random()*Math.pow(10,10));
             document.getElementById('visible-cam-output').src = 'visible_cam_output.png?'+randNum;
             document.getElementById('thermal-cam-output').src = 'thermal_cam_output.png?'+randNum;
         }
-        setInterval(refreshCameraImages, 500);
-        
-        function updateStatus(){
-            let status = pollStatus();
+        TIMERS.cameraUpdateTimer = setInterval(refreshCameraImages, SYSTEM_SETTINGS.cameraUpdateInterval);
+
+        function updateSystemStatus() {
+            let status = requestStatus();
             if(status && status.timestamp && status.timestamp > STATUS.timeLastAlive) {
                 STATUS.isArmed = status.isArmed;
                 STATUS.timeLastAlive = status.timestamp;
@@ -1015,35 +1060,32 @@
             } else {
                 setIndicator(0, false);
             }
-            if (new Date().getTime() - STATUS.timeLastAlive > INSTRUMENT_CONTROL.timeoutMilSec) {
-                setIndicator(0, false);
-                throw 'device was disconnected at time ' + new Date().getTime();
+            if (new Date().getTime() - STATUS.timeLastAlive > SYSTEM_SETTINGS.timeoutMilSec) {
+                if(STATUS.isConnected) {
+                    STATUS.isConnected = false;
+                    setIndicator(0, false);
+                    console.log('device was disconnected at time ' + new Date().getTime());
+                }
+            } else {
+                STATUS.isConnected = true;
+                setIndicator(0, true);
             }
+            // call backend function then call updateTargetDataDisplay
+            // call view updates for: 
+            // isArmed - displayPersistentAlert (if not there already)! 
+            // isAlive - display in target info area under everything with little laser symbol, 
+            // remoteEnabled 
+            // diskSpace - end trial if it ever drops below 1.
         }
-        setInterval(updateStatus, 250);
+        TIMERS.statusUpdateTimer = setInterval(updateSystemStatus, SYSTEM_SETTINGS.statusUpdateInterval);
 
 
 //********************************************************************
 // BACKEND INTERFACE FUNCTIONS ********* IMPLEMENT THIS!!!************
 
-        const BACKEND_SETTINGS = {
-            ip:'',
-            port:'',
-        }
-
         /*
         commands: START_LASER, STOP_LASER, CALIBRATE_SYSTEM, SWAP_TARGETS, BEAT
         requests: GET_TARGET_INFO, GET_STATUS
-
-        var TARGET_INFO = {
-            positionU: ["",""],
-            uLastReported: -1, // UTC time (milsec of epoch)
-            tempU: "",
-            positionH: ["",""],
-            hLastReported: -1,
-            tempH: ["",""],
-            targetCount: 0, // update with number of simultaneous tracks currently detected
-        }
         */
 
         function sendCommand(command) {
@@ -1051,7 +1093,7 @@
             // this line specs the command API - http://ip_address:port/commands/SOME_COMMAND
             var commandPromise = false;
             try {
-                commandPromise = fetch('http://'+BACKEND_SETTINGS.ip+':'+BACKEND_SETTINGS.port+'/commands/'+command)
+                commandPromise = fetch('http://'+SYSTEM_SETTINGS.ip+':'+SYSTEM_SETTINGS.port+'/commands/'+command)
                 .then(function(response) {
                     let resp = response.json();
                     if (resp == "200") {
@@ -1108,29 +1150,50 @@
         }
         function stopLaser(){
             sendCommand("STOP_LASER");
-            if (STATUS.isArmed) {
-                displayLaserArmedWarning();
-            } else clearPersistentAlerts();
+            clearPersistentAlerts();
         }
         function sendHeartBeat(){
             sendCommand("BEAT");
         }
-        function getInstrumentInfo(){ // timestamp, remoteEnabled, isArmed, isAlive, diskSpace, numTargets, temps, positions
-            
+        
+
+        // request API - http://ip_address:port/requests/GET_STATUS, http://ip_address:port/requests/GET_TARGET_INFO 
+
+        function sendRequest(request) {
+
         }
-        function pollStatus(){
+
+
+        function requestStatus() {
             // retrieves status from status file for isArmed, remoteEnabled, isAlive, diskSpace and timestamp.
             /* calculates:  
                 PC connected - looks for a return signal and checks time stamp - delay > threshold counts as disconnect)
             */
+            // NOTE THESE ARE ALL TEST VALUES - NOT YET IMPLEMENTED! Real function should read each of these from the API.
             return {
                 isArmed: "true",
                 isAlive: "true",
                 remoteEnabled: "true",
-                timeLastAlive: new Date().getTime() - 75, // for example, testing with a 75 ms latency
-                diskSpace: 400,
+                timestamp: new Date().getTime() - 75, // for example, testing with a 75 ms latency
+                diskSpace: 20,
             }
             
+            // uses fetch request "GET_STATUS"
+        }
+
+        function requestTargetInfo() {
+            return {
+                positionU: [0.5,-4.8],
+                uLastReported: new Date().getTime(), // UTC time (milsec of epoch)
+                tempU: 27.4,
+                positionH: [false,false], // Note this could happen - if track of unheated target continues, 
+                                        // but track of heated target ends and instrument finds no other track.
+                hLastReported: new Date().getTime() - 6000,
+                tempH: [false,false],
+                targetCount: 1, // update with number of simultaneous tracks currently detected
+            }
+
+            // uses fetch request "GET_TARGET_INFO"
         }
 
     </script>
