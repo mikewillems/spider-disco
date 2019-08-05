@@ -888,7 +888,13 @@
         }
         function initPlacementStep(){
             showElements('#target-U-info, #second-placement-button', false);
-            document.getElementById('first-placement-button').addEventListener('click',()=>{showElement("first-placement-button", false); showElement('target-U-info',true); showElement("second-placement-button",true); enableButton("second-placement-button", true);},false);
+            document.getElementById('first-placement-button').addEventListener('click',()=>{
+                if (TARGET_INFO.targetCount < 1) {
+                    setStatusAreaColor('rgb(200,180,0)');
+                    setStatusAreaText('Target not detected. Please ensure at least one target is placed before continuing.');
+                } else {
+                    showElement("first-placement-button", false); showElement('target-U-info',true); showElement("second-placement-button",true); enableButton("second-placement-button", true);
+                }},false);
             document.getElementById('second-placement-button').addEventListener('click',()=>{showElements('#first-placement-button, #second-placement-button', false); showElement('swap-target-button', true); enableButton("primary-action-button", true);},false);
             enableButton("first-placement-button", true);
             enableButton("second-placement-button", false);
@@ -1121,7 +1127,8 @@
                     }
                     return resp;
                 }).catch( (err) => {
-                        console.log("Command ",command," not sent because device is disconnected.");
+                        setStatusAreaText("Command "+command+" not sent because PC is disconnected.");
+                        setStatusAreaColor("orange");
                 });
             } catch (err) {
                 console.log("Caught: ", err.message);
