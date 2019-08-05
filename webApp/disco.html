@@ -247,8 +247,8 @@
                         <div id="target-H-info" style="display:flex; flex-direction:column; align-items:center; justify-content:space-around;">
                             <div style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:90%; text-align:center; color:rgb(104,0,52); border:2px solid rgb(104,0,52); font-weight:bold; font-size:110%;"><span>Target H</span><span>&#128393;</span></div>
                             <table style="margin-bottom:0.75em;">
-                                <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Set: </span></td><td><span id="target-H-set-temp">--</span>&#8451;</td></tr>
-                                <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Temp: </span></td><td><span id="target-H-current-temp">--</span>&#8451;</td></tr>
+                                <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">&#916;T Set: </span></td><td><span id="target-H-set-temp">--</span></td></tr>
+                                <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">&#916;T: </span></td><td><span id="target-H-current-temp">--</span>&#8451;</td></tr>
                                 <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">(x,y): </span></td><td><span id="target-H-x-pos">--</span>mm,<span id="target-H-y-pos">--</span>mm</td></tr>
                                 <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Moved: </span></td><td><span id="target-H-distance-moved">--</span>mm</td></tr>
                             </table>
@@ -256,7 +256,7 @@
                         <div id="target-U-info" style="display:flex; flex-direction:column; align-items:center; justify-content:space-around;">
                             <div style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:90%; text-align:center; color:rgb(42,116,145); border:2px solid rgb(42,116,145); font-weight:bold; font-size:110%;"><span>Target U</span><span>&#128393;</span></div>
                             <table style="margin-bottom:0.75em;">
-                                <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Temp: </span></td><td><span id="target-U-current-temp">--</span>&#8451;</td></tr>
+                                <!--<tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Ambient: </span></td><td><span id="target-U-current-temp">--</span>&#8451;</td></tr>-->
                                 <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">(x,y): </span></td><td><span id="target-U-x-pos">--</span>mm,<span id="target-U-y-pos">--</span>mm</td></tr>
                                 <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Moved: </span></td><td><span id="target-U-distance-moved">--</span>mm</td></tr>
                             </table>
@@ -294,8 +294,8 @@
             <div id="right-section-static-div" style="margin-left:0.75em; margin-right:0.75em; display:flex; flex-direction:column; justify-content:space-between;">
                 <div id="indicators-div" style="display:flex; flex-direction:column; align-items:flex-start; margin-left: 0.75em; font-size:90%; height:88px; max-height:12vh;">
                     <div id="pc-connection-indicator" class="indicator-light" style="display:flex; flex-direction:row;"><div style="width:0.75em; height:0.75em; border:2px solid black; margin:2px; margin-right:.75em"></div><div>PC Connected</div></div>
-                    <div id="enrem-indicator" class="indicator-light" style="display:flex; flex-direction:row;"><div style="width:0.75em; height:0.75em; border:2px solid black; margin:2px; margin-right:.75em"></div><div>Remote Enabled</div></div>
-                    <div id="calibrated-indicator" class="indicator-light" style="display:flex; flex-direction:row;"><div style="width:0.75em; height:0.75em; border:2px solid black; margin:2px; margin-right:.75em"></div><div>System Calibrated</div></div>
+                    <div id="disk-space-indicator" class="indicator-light" style="display:flex; flex-direction:row;"><div style="width:0.75em; height:0.75em; border:2px solid black; margin:2px; margin-right:.75em"></div><div>Disk OK: <span id="disk-space"></span></div></div>
+                    <div id="laser-alive-indicator" class="indicator-light" style="display:flex; flex-direction:row;"><div style="width:0.75em; height:0.75em; border:2px solid black; margin:2px; margin-right:.75em"></div><div>Laser Alive</div></div>
                 </div>
                 <div id="action-button-container" style="width:90%; height:76px; max-height:10vh; display:flex; flex-direction:row; justify-content:space-around; align-items:flex-end;">
                     <button disabled id="secondary-action-button" style="font-weight:bold; font-size: 2.5vh; width:60px; max-width:7vh; height:90%; font-family:'Roboto Mono', monospace;"><span id="secondary-action-button-span"><</span></button>
@@ -314,32 +314,39 @@
             isArmed: "",
             isAlive: "",
             remoteEnabled: "",
-            timeLastAlive: "",
+            timeLastResponded: "",
             diskSpace: -1,
             isConnected: false,
             elapsedTime: 0,
+            laserIsSetToOn: false,
         };
         var TIMERS = {
             heartbeatTimer: null,
             statusUpdateTimer: null,
             cameraUpdateTimer: null,
+            targetInfoUpdateTimer: null,
         }
         const SYSTEM_SETTINGS = {
-            timeoutMilSec: 1000,
+            timeoutMilSec: 500,
             heartbeatInterval: 50,
-            statusUpdateInterval: 500,
+            statusUpdateInterval: 250,
             cameraUpdateInterval: 100,
+            targetInfoUpdateInterval: 500,
             ip: '',
             port: '',
         }
         var TARGET_INFO = {
-            positionU: ["",""],
-            uLastReported: -1, // UTC time (milsec of epoch)
-            tempU: "",
-            positionH: ["",""],
-            hLastReported: -1,
-            tempH: ["",""],
             targetCount: 0, // update with number of simultaneous tracks currently detected
+
+            hLastReported: -1,
+            positionH: ["--","--"],
+            tempH: ["--"],
+            movedH: "--",
+
+            uLastReported: -1, // UTC time (milsec of epoch)
+            positionU: ["--","--"],
+            tempU: "--",
+            movedU: "--",
         }
         //not yet used:
         var TRIAL_SETTINGS = {
@@ -374,8 +381,6 @@
             'power':0,
             'ambient':0,
         };
-
-        // GUI SPECIFIC
         var DISPLAY_STATE = {
             currentStep: 'home',
             cameraViewState: [false, false],
@@ -438,7 +443,7 @@
             },
             'trial':{
                 'title':'Trial in Progress',
-                'instructions':'Press "STOP TRIAL" to turn off the laser.',
+                'instructions':'"STOP TRIAL" will set laser to off.',
                 'view':'target-data-view',
                 'content':'',
                 'actionButtonText':'STOP TRIAL',
@@ -448,12 +453,12 @@
             },
         }
         const dataIDs = {
-            "tempU" :"target-U-current-temp",
+            // "tempU" :"target-U-current-temp", // not currently used - u assumed at ambient, which we won't measure
             "xU"    :"target-U-x-pos",
             "yU"    :"target-U-y-pos",
             "movedU":"target-U-distance-moved",
             "setH"  :"target-H-set-temp",
-            "tempH" :"target-H-current-temp",
+            "tempH" :"target-H-current-temp", // this is in terms of the delta with ambient
             "xH"    :"target-H-x-pos",
             "yH"    :"target-H-y-pos",
             "movedH":"target-H-distance-moved",
@@ -575,14 +580,22 @@
             statusArea.appendChild(getSpan('status-spacer-span', statusSpacer));
             statusArea.appendChild(getSpan('trial-length-span', trialLengthDisplay));
         }
-        // Pass in a dict to update data display for a particular target.
-        // If useLonghand is true, use the DOM IDs for keys, else use the JS shorthand:
-        function updateTargetDataDisplay(dataObj, useLonghand){
-            for (let key in dataObj){
-                let targetId = useLonghand ? key : dataIDs[key];
-                let val = dataObj[key];
-                if(val) document.getElementById(targetId).innerHTML = val;
-            };
+        function updateTargetInfoDisplay(){
+            // count
+            document.getElementById("target-count").innerText = TARGET_INFO.targetCount;
+
+            // position
+            document.getElementById("target-H-x-pos").innerText = TARGET_INFO.positionH[0];
+            document.getElementById("target-H-y-pos").innerText = TARGET_INFO.positionH[1];
+            document.getElementById("target-U-x-pos").innerText = TARGET_INFO.positionU[0];
+            document.getElementById("target-U-y-pos").innerText = TARGET_INFO.positionU[1];
+
+            // temp and moved
+            document.getElementById("target-H-current-temp").innerText = TARGET_INFO.tempH;
+            // document.getElementById("target-U-current-temp").innerText = TARGET_INFO.tempU; // not used
+            
+            document.getElementById("target-H-distance-moved").innerText = TARGET_INFO.movedH;
+            document.getElementById("target-U-distance-moved").innerText = TARGET_INFO.movedU;
         }
         function setStatusAreaColor(color){
             document.getElementById('status-area').style.backgroundColor=color;
@@ -645,6 +658,8 @@
                 }
                 currentStepObj.initialize();
             }
+
+            STATUS.laserIsSetToOn = DISPLAY_STATE.currentStep == "trial" && trialConfig.temperature > 0;
         }
         function pushBackButton(){
             setStep(discoSteps[DISPLAY_STATE.currentStep].previousStep);
@@ -717,14 +732,12 @@
             updateSettingsDisplay();
         }
         function saveProfile(){
-            let date = new Date();
-            let dateString = (
-                date.getFullYear() + String(new Date()).split(' ')[1] + ("0" + date.getDate()).slice(-2) + '_'+
-                ("0" + date.getHours()).slice(-2) + "-" + ("0" + date.getMinutes()).slice(-2) + "-" + ("0" + date.getSeconds()).slice(-2));
+            let date = String(new Date()).split(' ');
+            let dateString = [date[3],date[1]+date[2],date[4]].join('_').replace(/:/g,'-');
             var profileData = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({"options":trialConfigValues, "selections":trialConfig,}));
             let profileJSON = JSON.stringify({"options":trialConfigValues, "selections":trialConfig,}, null, 1);
             let saveProfileEl = document.getElementById('past-trial-save-div');
-            saveProfileEl.innerHTML = '<a id="save-profile-link" href="data:' + profileData + '" download="settings'+dateString+'.json">download JSON</a>';
+            saveProfileEl.innerHTML = '<a id="save-profile-link" href="data:' + profileData + '" download="settings_'+dateString+'.json">download JSON</a>';
             document.getElementById('save-profile-link').click();
         }
         var priorTrialName = "";
@@ -866,7 +879,7 @@
             clearInterval(TIMERS.heartbeatTimer);
             clearStatusArea();
             document.getElementById('primary-action-button').removeEventListener('click', stopTrialManually);
-            setStatusAreaText('Trial terminated due to error: '+errorMessage);
+            setStatusAreaText('Trial terminated at '+getTimeStamp(STATUS.elapsedTime)+' due to error: '+errorMessage);
             setStatusAreaColor('red');
         }
 
@@ -887,6 +900,10 @@
             enableButton("primary-action-button", true);
         }
         function initPlacementStep(){
+            let tempString = "unheated";
+            if (trialConfig.temperature == trialConfigValues.temperature.length - 1) {tempString = "max possible";}
+            else if (trialConfig.temperature > 0) {tempString = trialConfigValues.temperature[trialConfig.temperature] + '&#8451;';}
+            document.getElementById('target-H-set-temp').innerHTML = tempString;
             showElements('#target-U-info, #second-placement-button', false);
             document.getElementById('first-placement-button').addEventListener('click',()=>{
                 if (TARGET_INFO.targetCount < 1) {
@@ -906,6 +923,12 @@
             enableButton("primary-action-button", false);
             document.getElementsByClassName('safety-step-text')[0].style.display = "flex";
             document.getElementsByClassName('safety-step-button')[0].style.display = "flex";
+            if(trialConfigValues.temperature[trialConfig.temperature] == 0 && !STATUS.isArmed && !STATUS.isAlive) {
+                setInstructionText("You are conducting an unheated trial, and the laser is disarmed. It is safe to proceed without further checks.");
+                document.getElementsByClassName("safety-step-text")[0].style.display = "none";
+                document.getElementsByClassName("safety-step-button")[0].style.display = "none";
+                enableButton("primary-action-button", true);
+            }
         }
         function initTrialStep(){
             if (!STATUS.isConnected) {
@@ -929,7 +952,9 @@
             // Convert from minutes to seconds and account for manually stopped trial:
             var trialDurationSeconds = trialConfig.duration > 0 ? 60 * trialConfigValues.duration[trialConfig.duration] : 60 * 60 * 24; 
             showElement('swap-target-button', true);
-            startLaser(trialConfig, trialConfigValues);
+            if (STATUS.laserIsSetToOn) {
+                startLaser(trialConfig, trialConfigValues);
+            }
             let startTime = new Date();
             let timesRun = 0;
             TIMERS.heartbeatTimer = setInterval(function(){
@@ -1055,16 +1080,16 @@
 
         function updateSystemStatus() {
             let status = requestStatus();
-            if(status && status.timestamp && status.timestamp > STATUS.timeLastAlive) {
+            if(status && status.timestamp && status.timestamp > STATUS.timeLastResponded) {
                 STATUS.isArmed = status.isArmed;
-                STATUS.timeLastAlive = status.timestamp;
-                STATUS.isAlive = status.isAlive;
+                STATUS.timeLastResponded = status.timestamp;
+                STATUS.isAlive = status.isAlive; // this refers to the laser HBM signal
                 STATUS.remoteEnabled = status.remoteEnabled;
                 STATUS.diskSpace = status.diskSpace;
             } else {
                 setIndicator(0, false);
             }
-            if (new Date().getTime() - STATUS.timeLastAlive > SYSTEM_SETTINGS.timeoutMilSec) {
+            if (new Date().getTime() - STATUS.timeLastResponded > SYSTEM_SETTINGS.timeoutMilSec) {
                 if(STATUS.isConnected) {
                     STATUS.isConnected = false;
                     setIndicator(0, false);
@@ -1074,18 +1099,35 @@
                 STATUS.isConnected = true;
                 setIndicator(0, true);
             }
-            // call backend function then call updateTargetDataDisplay
-            // call view updates for: 
-            // isArmed - displayPersistentAlert (if not there already)! 
-            // isAlive - display in target info area under everything with little laser symbol, 
-            // remoteEnabled 
-            // diskSpace - end trial if it ever drops below 1.
+            if (STATUS.laserIsSetToOn || status.isAlive) {
+                displayLaserActiveWarning();
+                if (status.isAlive) {
+                    setIndicator(2, true);
+                } else { setIndicator(2, false); }
+            } else if (STATUS.isArmed) {
+                displayLaserArmedWarning();
+            }
+            document.getElementById("disk-space").innerText = STATUS.diskSpace;
+            if (STATUS.diskSpace < 1) {
+                setIndicator(1, false);
+                terminateTrialWithError("Ran out of disk space.");
+            } else { setIndicator(1, true); }
+
         }
         TIMERS.statusUpdateTimer = setInterval(updateSystemStatus, SYSTEM_SETTINGS.statusUpdateInterval);
-
+        
+        function updateTargetInfo() {
+            let tInfo = requestTargetInfo();
+            if(tInfo) {
+                TARGET_INFO = tInfo;
+            }
+            updateTargetInfoDisplay();
+        }
+        TIMERS.targetInfoUpdateTimer = setInterval(updateTargetInfo, SYSTEM_SETTINGS.targetInfoUpdateInterval);
+        
 
 //********************************************************************
-// BACKEND INTERFACE FUNCTIONS ********* IMPLEMENT THIS!!!************
+// BACKEND INTERFACE FUNCTIONS
 
         /*
         commands: START_LASER, STOP_LASER, CALIBRATE_SYSTEM, SWAP_TARGETS, BEAT
@@ -1174,9 +1216,9 @@
             */
             // NOTE THESE ARE ALL TEST VALUES - NOT YET IMPLEMENTED! Real function should read each of these from the API.
             return {
-                isArmed: "true",
-                isAlive: "true",
-                remoteEnabled: "true",
+                isArmed: false,
+                isAlive: false,
+                remoteEnabled: true,
                 timestamp: new Date().getTime() - 75, // for example, testing with a 75 ms latency
                 diskSpace: 20,
             }
@@ -1186,14 +1228,18 @@
 
         function requestTargetInfo() {
             return {
-                positionU: [0.5,-4.8],
-                uLastReported: new Date().getTime(), // UTC time (milsec of epoch)
-                tempU: 27.4,
-                positionH: [false,false], // Note this could happen - if track of unheated target continues, 
-                                        // but track of heated target ends and instrument finds no other track.
-                hLastReported: new Date().getTime() - 6000,
-                tempH: [false,false],
                 targetCount: 1, // update with number of simultaneous tracks currently detected
+                
+                hLastReported: new Date().getTime() - 6000,
+                positionH: "--", // Note this could happen - if track of unheated target continues, 
+                                        // but track of heated target ends and instrument finds no other track.
+                tempH: "--", // this is the deltaT, it's '--' if no track is identified for the heated target.
+                movedH: "--",
+                
+                uLastReported: new Date().getTime(), // UTC time (milsec of epoch)
+                positionU: [5.0,-46.2],
+                // tempU: 27.4, // tempU unused
+                movedU: 31, // in mm during the last 5 seconds, this track only
             }
 
             // uses fetch request "GET_TARGET_INFO"
