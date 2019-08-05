@@ -1039,10 +1039,10 @@
         function sendCommand(command) {
             
             // this line specs the command API - http://ip_address:port/commands/SOME_COMMAND
+            var commandPromise = false;
             try {
-                fetch('http://'+BACKEND_SETTINGS.ip+':'+BACKEND_SETTINGS.port+'/commands/'+command)
+                commandPromise = fetch('http://'+BACKEND_SETTINGS.ip+':'+BACKEND_SETTINGS.port+'/commands/'+command)
                 .then(function(response) {
-                    responded = true;
                     let resp = response.json();
                     if (resp == "200") {
                         // OK
@@ -1070,9 +1070,12 @@
                         setStatusAreaColor('red');
                     }
                     return resp;
+                }).catch( (err) => {
+                        setStatusAreaColor("orange");
+                        setStatusAreaText("Instrument is disconnected.");
                 });
             } catch (err) {
-                setStatusAreaColor("red");
+                setStatusAreaColor("orange");
                 setStatusAreaText("Instrument is disconnected.");
             }
         }
