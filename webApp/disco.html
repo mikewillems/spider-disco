@@ -311,7 +311,7 @@
             isArmed: "",
             isAlive: "",
             remoteEnabled: "",
-            time: "",
+            timeLastAlive: "",
             diskSpace: -1,
         };
         var INSTRUMENT_CONTROL = {
@@ -833,7 +833,12 @@
             setStatusAreaText('Trial terminated due to error: '+errorMessage);
             setStatusAreaColor('red');
         }
+        function getConnectionStatus(){
+            return (new Date().getTime() - STATUS.timeLastAlive) < INSTRUMENT_CONTROL.timeoutMilSec;
+        }
 
+
+    // INITIALIZE THE VARIOUS STEPS
         function initHomeStep(){
         }
         function initSetupStep(){
@@ -989,12 +994,21 @@
         }
         setInterval(refreshCameraImages, 500);
         
-
         function updateStatus(){
             let status = pollStatus();
-            let armed = status.isArmed;
-            let alive = status.isAlive;
-            let isConnectedToPC = (new Date().getTime() - status.time) < INSTRUMENT_CONTROL.timeoutMilSec;
+            if(status && status.timestamp && status.timestamp > STATUS.timeLastAlive) {
+                STATUS.isArmed = status.isArmed;
+                STATUS.timeLastAlive = status.timestamp;
+                STATUS.isAlive = status.isAlive;
+                STATUS.remoteEnabled = status.remoteEnabled;
+                STATUS.diskSpace = status.diskSpace;
+            } else {
+                setIndicator(0, false);
+            }
+            if (new Date().getTime() - STATUS.timeLastAlive > INSTRUMENT_CONTROL.timeoutMilSec) {
+                setIndicator(0, false);
+                throw 'device was disconnected at time ' + new Date().getTime();
+            }
         }
         setInterval(updateStatus, 250);
 
@@ -1023,41 +1037,44 @@
         */
 
         function sendCommand(command) {
-            let responded = false;
-            setTimeout (()=> {
-                setDisconnectedStatus();
-            }, INSTRUMENT_CONTROL.timeoutMilSec);
-            fetch(ip+':'+port+'/commands/'+command)
-            .then(function(response) {
-                responded = true;
-                let resp = response.json();
-                if (resp == "200") {
-                    // OK
-                    setStatusAreaText(command + " command executed successfully.");
-                    setStatusAreaColor('green');
-                }
-                if (resp == "202") {
-                    // ACCEPTED
-                    setStatusAreaText(command + " command received, pending...");
-                    setStatusAreaColor('rgb(200,180,0)');
-                }
-                if (resp == "408") {
-                    // TIMEOUT
-                    setStatusAreaText(command + " command timed out.");
-                    setStatusAreaColor('red');
-                }
-                if (resp == "500") {
-                    // INTERNAL SERVER ERROR
-                    setStatusAreaText("Server failure, failed to issue "+command+" command.");
-                    setStatusAreaColor('red');
-                }
-                if (resp == "503") {
-                    // SERVICE UNAVAILABLE
-                    setStatusAreaText("Service unavailable, failed to issue "+command+" command.");
-                    setStatusAreaColor('red');
-                }
-                return resp;
-            });
+            
+            // this line specs the command API - http://ip_address:port/commands/SOME_COMMAND
+            try {
+                fetch('http://'+BACKEND_SETTINGS.ip+':'+BACKEND_SETTINGS.port+'/commands/'+command)
+                .then(function(response) {
+                    responded = true;
+                    let resp = response.json();
+                    if (resp == "200") {
+                        // OK
+                        setStatusAreaText(command + " command executed successfully.");
+                        setStatusAreaColor('green');
+                    }
+                    if (resp == "202") {
+                        // ACCEPTED
+                        setStatusAreaText(command + " command received, pending...");
+                        setStatusAreaColor('rgb(200,180,0)');
+                    }
+                    if (resp == "408") {
+                        // TIMEOUT
+                        setStatusAreaText(command + " command timed out.");
+                        setStatusAreaColor('red');
+                    }
+                    if (resp == "500") {
+                        // INTERNAL SERVER ERROR
+                        setStatusAreaText("Server failure, failed to issue "+command+" command.");
+                        setStatusAreaColor('red');
+                    }
+                    if (resp == "503") {
+                        // SERVICE UNAVAILABLE
+                        setStatusAreaText("Service unavailable, failed to issue "+command+" command.");
+                        setStatusAreaColor('red');
+                    }
+                    return resp;
+                });
+            } catch (err) {
+                setStatusAreaColor("red");
+                setStatusAreaText("Instrument is disconnected.");
+            }
         }
 
         function calibrateSystem(){
@@ -1085,20 +1102,19 @@
         function sendHeartBeat(){
             sendCommand("BEAT");
         }
-        function getTargetInfo(){ // temps, positions, timestamp, remoteEnabled, isAlive, diskSpace, numTargets
+        function getInstrumentInfo(){ // timestamp, remoteEnabled, isArmed, isAlive, diskSpace, numTargets, temps, positions
             
         }
         function pollStatus(){
-            // retrieves status from status file for isArmed, remoteIsEnabled, isAlive, diskSpace and timestamp.
+            // retrieves status from status file for isArmed, remoteEnabled, isAlive, diskSpace and timestamp.
             /* calculates:  
                 PC connected - looks for a return signal and checks time stamp - delay > threshold counts as disconnect)
-                Recording minutes left (approximate, erring on low side, if diskSpace not given in these units)
             */
             return {
                 isArmed: "true",
                 isAlive: "true",
                 remoteEnabled: "true",
-                time: new Date().getTime() - 75, // for example, testing with a 75 ms latency
+                timeLastAlive: new Date().getTime() - 75, // for example, testing with a 75 ms latency
                 diskSpace: 400,
             }
             
