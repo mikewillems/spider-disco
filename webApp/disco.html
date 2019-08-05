@@ -605,13 +605,6 @@
         function setPrimaryActionButtonText(text){
             document.getElementById('primary-action-button-span').innerHTML = text;
         }
-        function enableBackButton(enable){
-            if(enable) {
-                document.getElementById("secondary-action-button").removeAttribute("disabled");
-            } else {
-                document.getElementById("secondary-action-button").setAttribute("disabled", "disabled");
-            }
-        }
         function setStepTitleText(newTitle){
             document.getElementById('step-title').innerHTML = newTitle;
         }
@@ -642,7 +635,7 @@
                 }
                 setContent(currentStepObj.content);
                 setPrimaryActionButtonText(currentStepObj.actionButtonText);
-                enableBackButton(currentStepObj.previousStep);
+                enableButton("secondary-action-button", currentStepObj.previousStep);
                 clearStatusArea();
                 setStatusAreaColor("black");
                 if(stepKey == 'trial') {
