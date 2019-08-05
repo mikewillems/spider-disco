@@ -828,6 +828,11 @@
                 enableButton("duration-increment-button", false);
                 setStatusAreaText('Only ' + Math.floor(STATUS.diskSpace) + ' minutes of disk space available.');
             }
+                // set to unheated if power is 'off'
+            if (trialConfig.power == 0 && trialConfig.temperature > 0) {
+                trialConfig.temperature = 0;
+                updateSettingsDisplay();
+            }
             
             // text formatting
             let durationString = trialConfig.duration == 0 ? "manual stop" : trialConfigValues.duration[trialConfig.duration] + " min";
