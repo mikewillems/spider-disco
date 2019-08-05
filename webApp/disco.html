@@ -157,7 +157,7 @@
             <div id="right-section-scroll-wrapper" class="scroll" style="width:100%; padding:0; height:580px; max-height:76vh; overflow-y:auto; margin-bottom:0.5em;">
                 <div id="right-section-info-div" style="padding-left:1em; padding-right:1em; display:flex; flex-direction:column; justify-content: space-between;">
                     <h1 id="step-title" style="text-decoration:none; font-weight:bold; text-transform:uppercase; font-size:125%; padding-top:0.5em; text-align: center; border-bottom:2px solid black;"></h1>
-                    <p id="instruction-text" style="margin-top:0;"></p>
+                    <p id="instruction-text" class="hidden" style="margin-top:0;"></p>
                 </div>
                 <div id="right-section-views-div" style="padding-left:1em; padding-right:1em; display:flex; flex-direction:column; justify-content: space-between;">
 
@@ -241,6 +241,9 @@
                     </div>
 
                     <div id="target-data-view"  class="view" style="margin:0; padding:0;">
+                        <div id="target-count-div" style="margin-left:0.5em; margin-bottom:1em;">
+                            <span id="target-count">0</span>&nbsp;targets in view.
+                        </div>
                         <div id="target-H-info" style="display:flex; flex-direction:column; align-items:center; justify-content:space-around;">
                             <div style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:90%; text-align:center; color:rgb(104,0,52); border:2px solid rgb(104,0,52); font-weight:bold; font-size:110%;"><span>Target H</span><span>&#128393;</span></div>
                             <table style="margin-bottom:0.75em;">
@@ -604,6 +607,7 @@
         }
         function setInstructionText(newInstructions){
             document.getElementById('instruction-text').innerHTML = newInstructions;
+            showElement('instruction-text', true);
         }
         function setView(prevViewId, newViewId){
             document.getElementById(prevViewId).style.display = 'none';            
@@ -623,7 +627,9 @@
                 var currentStepObj = discoSteps[stepKey];
                 setStepTitleText(currentStepObj.title);
                 setView(prevStepObj.view, currentStepObj.view);
-                setInstructionText(currentStepObj.instructions);
+                if(currentStepObj.instructions) {
+                    setInstructionText(currentStepObj.instructions);
+                }
                 setContent(currentStepObj.content);
                 setPrimaryActionButtonText(currentStepObj.actionButtonText);
                 enableBackButton(currentStepObj.previousStep);
@@ -642,19 +648,21 @@
         function pushActionButton(){;
             setStep(discoSteps[DISPLAY_STATE.currentStep].nextStep);
         }
-        function enableSecondPlacement(isEnabled){
+        function enableButton(buttonId, isEnabled){
             if(isEnabled) {
-                document.getElementById('second-placement-button').removeAttribute('disabled');
+                document.getElementById(buttonId).removeAttribute('disabled');
             } else {
-                document.getElementById('second-placement-button').setAttribute('disabled','true');            
+                document.getElementById(buttonId).setAttribute('disabled','true');            
             }
         }
-        function hidePlacementButtons(){
-            document.getElementById('first-placement-button').style.display = "none";
-            document.getElementById('second-placement-button').style.display = "none";
+        function showElement(id, shown=true) {
+            document.getElementById(id).style.display = shown ? "flex" : "none";
         }
-        function showSwapButton(){
-            document.getElementById('swap-target-button').style.display = "block";
+        function showElements(selector, shown=true) {
+            let elements = document.querySelectorAll(selector);
+            for (let i = 0; i < elements.length; i++) {
+                elements[i].style.display = shown ? "flex":"none";
+            }
         }
         function setProfile(profileObj) {
             let loadedOptionKeys = Object.keys(profileObj.options);
@@ -851,18 +859,20 @@
             updateCameraView([true,false]);
             updateCameraButtonView();
             showCameraViewButtons(false);
-            enablePrimaryActionButton(true);
+            enableButton("primary-action-button", true);
         }
         function initPlacementStep(){
-            document.getElementById('first-placement-button').addEventListener('click',()=>{enableSecondPlacement(true);},false);
-            document.getElementById('second-placement-button').addEventListener('click',()=>{hidePlacementButtons(); showSwapButton(); enablePrimaryActionButton(true);},false);
-            enableSecondPlacement(false);
+            showElements('#target-U-info, #second-placement-button', false);
+            document.getElementById('first-placement-button').addEventListener('click',()=>{showElement("first-placement-button", false); showElement('target-U-info',true); showElement("second-placement-button",true); enableButton("second-placement-button", true);},false);
+            document.getElementById('second-placement-button').addEventListener('click',()=>{showElements('#first-placement-button, #second-placement-button', false); showElement('swap-target-button', true); enableButton("primary-action-button", true);},false);
+            enableButton("first-placement-button", true);
+            enableButton("second-placement-button", false);
             showCameraViewButtons(true);
             updateCameraView();
-            enablePrimaryActionButton(false);
+            enableButton("primary-action-button", false);
         }
         function initSafetyStep(){
-            enablePrimaryActionButton(false);
+            enableButton("primary-action-button", false);
             document.getElementsByClassName('safety-step-text')[0].style.display = "flex";
             document.getElementsByClassName('safety-step-button')[0].style.display = "flex";
         }
@@ -870,7 +880,7 @@
             INSTRUMENT_CONTROL.elapsedTime = 0;
             // Convert from minutes to seconds and account for manually stopped trial:
             var trialDuration = trialConfig.duration > 0 ? 60 * trialConfigValues.duration[trialConfig.duration] : 60 * 60 * 24; 
-            showSwapButton();
+            showElement('swap-target-button', true);
             startLaser(trialConfig, trialConfigValues);
             let startTime = new Date();
             let timesRun = 0;
@@ -892,7 +902,7 @@
             pushCameraViewButton(0);
             pushCameraViewButton(1);
             setStep('home');
-            enablePrimaryActionButton(true);
+            enableButton("primary-action-button", true);
 
             document.getElementById('visible-button').addEventListener('click', ()=>{pushCameraViewButton(0);}, false);
             document.getElementById('thermal-button').addEventListener('click', ()=>{pushCameraViewButton(1);}, false);
@@ -957,7 +967,7 @@
                         safetyStepTexts[i+1].style.display = "flex";
                         safetyStepButtons[i+1].style.display = "flex";
                     } else {
-                        enablePrimaryActionButton(true);
+                        enableButton("primary-action-button", true);
                     }
                 },false);
             }
