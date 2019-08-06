@@ -1207,14 +1207,14 @@
         // power is a percentage between 0 and 100 with 100 representing the max
         // power we allow the laser to be set at
         function startLaser(){ 
-            if (DISPLAY_STATE.currentStep == "trial" && trialConfig.temperature > 0;) {
+            if (DISPLAY_STATE.currentStep == "trial" && trialConfig.temperature > 0) {
                 sendCommand("START_LASER");
                 if (STATUS.isArmed) { displayLaserActiveWarning(); }
                 STATUS.laserIsSetToOn = true;
             }
         }
         function stopLaser(){
-            if (laserIsSetToOn) {
+            if (STATUS.laserIsSetToOn) {
                 sendCommand("STOP_LASER");
                 clearPersistentAlerts();
             }
