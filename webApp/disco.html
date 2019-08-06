@@ -301,11 +301,8 @@
                     <button disabled id="secondary-action-button" style="font-weight:bold; font-size: 2.5vh; width:60px; max-width:4vw; height:90%; font-family:'Roboto Mono', monospace;">
                         <span id="secondary-action-button-span"><</span>
                     </button>
-                    <button id="pause-button" class="hidden" style="font-weight:bold; font-size: 2.5vh; display:flex; flex-direction:row; justify-content:center; align-items:center; width:225px; max-width:15vw; height:90%; font-family:'Roboto Mono', monospace;">
-                        <span>PAUSE TRIAL</span><span id="pause-symbol" style="font-weight:bold;">&nbsp;&#9612;&#9612;</span>
-                    </button>
-                    <button id="resume-button" class="hidden" style="font-weight:bold; font-size: 2.5vh; display:flex; flex-direction:row; justify-content:center; align-items:center; width:225px; max-width:15vw; height:90%; font-family:'Roboto Mono', monospace;">
-                        <span>RESUME TRIAL</span><span id="resume-symbol" style="font-weight:bold;">&nbsp;&#9654;</span>
+                    <button id="pause-resume-button" class="hidden" style="font-weight:bold; font-size: 2.5vh; display:flex; flex-direction:row; justify-content:center; align-items:center; width:225px; max-width:15vw; height:90%; font-family:'Roboto Mono', monospace;">
+                        <span id="pause-resume-text">PAUSE TRIAL</span><span id="pause-symbol" style="font-weight:bold;">&nbsp;&#9612;&#9612;</span><span id="resume-symbol" class="hidden" style="font-weight:bold; font-size:130%;">&nbsp;&#9654;</span>
                     </button>
                     <button disabled id="primary-action-button" style="font-weight:bold; font-size: 2.5vh; display:flex; flex-direction:row; justify-content:center; align-items:center; width:225px; max-width:15vw; height:90%; font-family:'Roboto Mono', monospace;">
                         <span id="primary-action-button-span" style="font-weight:bold;">START TRIAL</span><span id="right-arrow-span" style="font-weight:bold;">&nbsp;></span><span id="stop-button-span" class="hidden">&#11035;</span>
@@ -336,7 +333,9 @@
             timeLastResponded: "",
             diskSpace: -1,
             isConnected: false,
+            isPaused: false,
             elapsedTime: 0,
+            timeInTrial: 0,
             laserIsSetToOn: false,
         };
         var TIMERS = {
@@ -848,16 +847,17 @@
 
         }
         function stopTrialManually(){
-            showElement("pause-button", false);
-            showElement("resume-button", false);
+            showElement("pause-resume-button", false);
+            showElement("pause-resume-button", false);
             showElement("right-arrow-span", false);
             showElement("stop-button-span", false);
             showElement("right-arrow-span", true);
+            showElement("secondary-action-button", true);   
             stopLaser();
             clearInterval(TIMERS.heartbeatTimer);
             clearStatusArea();
             document.getElementById('primary-action-button').removeEventListener('click', stopTrialManually);
-            setStatusAreaText('Trial stopped manually at '+getTimeStamp(STATUS.elapsedTime)+'.');
+            setStatusAreaText('Trial stopped manually at '+getTimeStamp(STATUS.timeInTrial)+'.');
             setStatusAreaColor('purple');
         }
         function concludeTrial(){
@@ -871,8 +871,25 @@
             clearInterval(TIMERS.heartbeatTimer);
             clearStatusArea();
             document.getElementById('primary-action-button').removeEventListener('click', stopTrialManually);
-            setStatusAreaText('Trial terminated at '+getTimeStamp(STATUS.elapsedTime)+' due to error: '+errorMessage);
+            setStatusAreaText('Trial terminated at '+getTimeStamp(STATUS.timeInTrial)+' due to error: '+errorMessage);
             setStatusAreaColor('red');
+        }
+        function pauseOrResumeTrial(){
+            STATUS.isPaused = !STATUS.isPaused;
+
+            if(STATUS.isPaused) {
+                stopLaser();
+                STATUS.laserIsSetToOn = false;
+                setStepTitleText('Trial Paused');
+                document.getElementById('pause-resume-text').innerText = "RESUME TRIAL";
+                showElement('resume-symbol', true);
+                showElement('pause-symbol', false);
+            } else {
+                setStepTitleText('Trial in Progress');
+                document.getElementById('pause-resume-text').innerText = "PAUSE TRIAL";
+                showElement('pause-symbol', true);
+                showElement('resume-symbol', false);
+            }
         }
 
 
@@ -940,26 +957,29 @@
                 setStatusAreaText('Not enough disk space, please select a duration less than ' + Math.floor(STATUS.diskSpace));
                 return;
             }
-            STATUS.elapsedTime = 0;
-            // Convert from minutes to seconds and account for manually stopped trial:
-            var trialDurationSeconds = trialConfig.duration > 0 ? 60 * trialConfigValues.duration[trialConfig.duration] : 60 * 60 * 24; 
             showElement("secondary-action-button",false);
-            showElement("pause-button", true);
+            showElement("pause-resume-button", true);
             showElement("right-arrow-span", false);
             showElement("stop-button-span", true);
             showElement('swap-target-button', true);
             if (STATUS.laserIsSetToOn) {
                 startLaser(trialConfig, trialConfigValues);
             }
+            STATUS.elapsedTime = 0;
+            // Convert from minutes to seconds and account for manually stopped trial:
+            var trialDurationSeconds = trialConfig.duration > 0 ? 60 * trialConfigValues.duration[trialConfig.duration] : 60 * 60 * 24;
             let startTime = new Date();
-            let timesRun = 0;
+            let intervalTime = 0;
             TIMERS.heartbeatTimer = setInterval(function(){
-                timesRun += 1;
                 sendHeartBeat();
-                STATUS.elapsedTime = (new Date() - startTime) / 1000;
-                showTrialProgress(STATUS.elapsedTime, trialDurationSeconds);
+                intervalTime = (new Date() - startTime) / 1000 - STATUS.elapsedTime;
+                STATUS.elapsedTime += intervalTime;
+                if (!STATUS.isPaused) {
+                    STATUS.timeInTrial += intervalTime;
+                    showTrialProgress(STATUS.timeInTrial, trialDurationSeconds);
+                }
                 updateSystemStatus();
-                if (STATUS.elapsedTime > trialDurationSeconds) {
+                if (STATUS.timeInTrial > trialDurationSeconds) {
                     concludeTrial();
                 }
             }, STATUS.heartbeatInterval);
@@ -978,6 +998,7 @@
             document.getElementById('thermal-button').addEventListener('click', ()=>{pushCameraViewButton(1);}, false);
             document.getElementById('primary-action-button').addEventListener('click', pushActionButton, false);
             document.getElementById('secondary-action-button').addEventListener('click', pushBackButton, false);
+            document.getElementById('pause-resume-button').addEventListener('click', pauseOrResumeTrial, false);
 
             // One-time initialization for steps:
 
