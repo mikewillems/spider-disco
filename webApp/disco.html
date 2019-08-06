@@ -298,14 +298,14 @@
                     <div id="laser-alive-indicator" class="indicator-light" style="display:flex; flex-direction:row;"><div style="width:0.75em; height:0.75em; border:2px solid black; margin:2px; margin-right:.75em"></div><div>Laser Alive</div></div>
                 </div>
                 <div id="action-button-container" style="width:90%; height:76px; max-height:10vh; display:flex; flex-direction:row; justify-content:space-around; align-items:flex-end;">
-                    <button disabled id="secondary-action-button" style="font-weight:bold; font-size: 2.5vh; width:60px; max-width:4vw; height:90%; font-family:'Roboto Mono', monospace;">
-                        <span id="secondary-action-button-span"><</span>
+                    <button disabled id="secondary-action-button" style="font-weight:bold; display:flex; justify-content:center; align-items:center; text-align:center; sfont-size: 2.5vh; width:60px; max-width:4vw; height:90%; font-family:'Roboto Mono', monospace;">
+                        <span style="width:100%; text-align:center;" id="secondary-action-button-span"><</span>
                     </button>
                     <button id="pause-resume-button" class="hidden" style="font-weight:bold; font-size: 2.5vh; display:flex; flex-direction:row; justify-content:center; align-items:center; width:225px; max-width:15vw; height:90%; font-family:'Roboto Mono', monospace;">
                         <span id="pause-resume-text">PAUSE TRIAL</span><span id="pause-symbol" style="font-weight:bold;">&nbsp;&#9612;&#9612;</span><span id="resume-symbol" class="hidden" style="font-weight:bold; font-size:130%;">&nbsp;&#9654;</span>
                     </button>
                     <button disabled id="primary-action-button" style="font-weight:bold; font-size: 2.5vh; display:flex; flex-direction:row; justify-content:center; align-items:center; width:225px; max-width:15vw; height:90%; font-family:'Roboto Mono', monospace;">
-                        <span id="primary-action-button-span" style="font-weight:bold;">START TRIAL</span><span id="right-arrow-span" style="font-weight:bold;">&nbsp;></span><span id="stop-button-span" class="hidden">&#11035;</span>
+                        <span id="primary-action-button-span" style="font-weight:bold;">START TRIAL</span><span id="right-arrow-span" style="font-weight:bold;">&nbsp;></span><span id="stop-button-span" class="hidden">&nbsp;&#11035;</span>
                     </button>
                 </div>
             </div>
@@ -845,9 +845,11 @@
 
         }
         function stopTrialManually(){
+            STATUS.isPaused = false;
+            showElement("pause-symbol", true);
+            showElement("resume-symbol", false);
+            document.getElementById("pause-resume-text").innerText = "PAUSE TRIAL";
             showElement("pause-resume-button", false);
-            showElement("pause-resume-button", false);
-            showElement("right-arrow-span", false);
             showElement("stop-button-span", false);
             showElement("right-arrow-span", true);
             showElement("secondary-action-button", true);   
@@ -964,6 +966,7 @@
             startLaser();
             
             STATUS.elapsedTime = 0;
+            STATUS.timeInTrial = 0;
             // Convert from minutes to seconds and account for manually stopped trial:
             var trialDurationSeconds = trialConfig.duration > 0 ? 60 * trialConfigValues.duration[trialConfig.duration] : 60 * 60 * 24;
             let startTime = new Date();
