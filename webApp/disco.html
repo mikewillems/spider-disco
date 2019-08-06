@@ -325,6 +325,23 @@
             targetInfoUpdateInterval: 500,
             ip: '',
             port: '',
+            targetOutlineWidth: 0.5,
+            visibleCamera: {
+                xResolution: 400,
+                yResolution: 300,
+            },
+            thermalCamera: {
+                xResolution: 320,
+                yResolution: 256,
+            },
+            computerVision: {
+                minArea: 1,
+                maxArea: 1,
+                threshold: 0.5,
+                maskPath: undefined,
+                processEveryNthFrame: undefined,
+                saveEveryNthFrame: undefined,
+            },
         }
         var STATUS = {
             isArmed: "",
@@ -349,11 +366,13 @@
 
             hLastReported: -1,
             positionH: ["--","--"],
+            boxH: [-100,-99,-100,-99], // keep it off screen
             tempH: ["--"],
             movedH: "--",
 
             uLastReported: -1, // UTC time (milsec of epoch)
             positionU: ["--","--"],
+            boxU: [-100,-99,-100,-99], // keep it off screen
             tempU: "--",
             movedU: "--",
         }
@@ -372,6 +391,7 @@
         var DISPLAY_STATE = {
             currentStep: 'home',
             cameraViewState: [false, false],
+            targetBoxElements: {}, // format {id:isVisible; } 
         }
         const discoSteps = {
             'home':{
@@ -844,6 +864,11 @@
             document.getElementById('setup-ambient-cur-val').innerHTML = ambString;
 
         }
+        function startTrial() {
+            // call function to send command to start laser
+            // move stuff from initTrialStep into here
+            // include directory setup stuff
+        }
         function stopTrialManually(){
             STATUS.isPaused = false;
             showElement("pause-symbol", true);
@@ -891,6 +916,47 @@
                 showElement('resume-symbol', false);
             }
         }
+        function addTargetBox(trackId, colorString) {
+            let existingEl = document.getElementById("box-"+trackId);
+            if(existingEl) {
+                existingEl.remove();
+            }
+            let boxEl = document.createElement('div');
+            boxEl.id = "box-"+trackId;
+            boxEl.style.outline = SYSTEM_SETTINGS.targetOutlineWidth+"vh solid "+colorString;
+            boxEl.style['outline-offset'] = -1 * SYSTEM_SETTINGS.targetOutlineWidth + "vh";
+            boxEl.style.position = "absolute"; 
+            boxEl.style["z-index"] += 10000;
+            DISPLAY_STATE.targetBoxElements[trackId] = boxEl;
+            document.getElementById('left-section').prepend(boxEl);
+        }
+        function setTargetBoxPosition(trackId, x1, xt, x2, y1, yt, y2) {
+            if(xt < x1 || xt > x2 || yt < y1 || yt > y2) {
+                console.log ("given target not in box, can't draw crosshairs...");
+            }
+            if(x1 > x2 || y1 > y2) {                
+                console.log ("box coordinates invalid, can't draw box...");
+                return;
+            }
+            let x = 0, y = 1;
+            //  img size in vw / img size in camera pixels = vu per cam pixel
+            let imgEl = document.getElementById('visible-cam-output');
+            let scaleFactor = 100 * imgEl.clientWidth / window.innerWidth / SYSTEM_SETTINGS.visibleCamera.xResolution;
+            console.log('scale factor: ',scaleFactor);
+            let boxCenterVW = [scaleFactor * (x1 + x2)/2, scaleFactor * (y1 + y2)/2];
+            let boxSizeVW = [scaleFactor * (x2 - x1), scaleFactor * (y2 - y1)];
+            let targetPositionVW = [scaleFactor * (xt), scaleFactor * yt];
+            let imgOffset = [100 * imgEl.offsetLeft / window.innerWidth , 100 * imgEl.offsetTop / window.innerWidth];
+           
+            let boxEl = document.getElementById("box-"+trackId);
+            boxEl.style.width = boxSizeVW[x] + "vw";
+            boxEl.style.height = boxSizeVW[y] + "vw";
+            boxEl.style.left = imgOffset[x] + x1 * scaleFactor + "vw";
+            boxEl.style.top = imgOffset[y] + y1 * scaleFactor + "vw";
+
+            // align the crosshairs...
+        }
+
 
 
     // INITIALIZE THE VARIOUS STEPS
@@ -1002,6 +1068,7 @@
             document.getElementById('primary-action-button').addEventListener('click', pushActionButton, false);
             document.getElementById('secondary-action-button').addEventListener('click', pushBackButton, false);
             document.getElementById('pause-resume-button').addEventListener('click', pauseOrResumeTrial, false);
+
 
             // One-time initialization for steps:
 
