@@ -1359,6 +1359,9 @@
             sendCommand("CALIBRATE_SYSTEM");
         }
         function swapHeated(){
+            let oldHeatedTarget = TARGET_INFO.heated;
+            TARGET_INFO.heated = TARGET_INFO.unheated;
+            TARGET_INFO.unheated = oldHeatedTarget;
             sendCommand("SWAP_TARGETS");
         }
         // config is a JSON object containing (at least) duration, temp, and power.
