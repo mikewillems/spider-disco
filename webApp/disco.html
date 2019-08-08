@@ -249,6 +249,7 @@
                             <table style="margin-bottom:0.75em;">
                                 <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">&#916;T Set: </span></td><td><span id="target-H-set-temp">--</span></td></tr>
                                 <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">&#916;T: </span></td><td><span id="target-H-current-temp">--</span>&#8451;</td></tr>
+                                <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Status: </span></td><td><span id="target-H-heating-status">heating</span></td></tr>
                                 <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">(x,y): </span></td><td><span id="target-H-x-pos">--</span>mm,<span id="target-H-y-pos">--</span>mm</td></tr>
                                 <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Moved: </span></td><td><span id="target-H-distance-moved">--</span>mm</td></tr>
                             </table>
@@ -323,8 +324,8 @@
             statusUpdateInterval: 250,
             cameraUpdateInterval: 100,
             targetInfoUpdateInterval: 500,
-            ip: '',
-            port: '',
+            ip: '127.0.0.1',
+            port: '5000',
             targetOutlineWidth: 0.5,
             visibleCamera: {
                 xResolution: 400,
@@ -361,20 +362,33 @@
             cameraUpdateTimer: null,
             targetInfoUpdateTimer: null,
         }
+        var TRACKS = {}
         var TARGET_INFO = {
-            targetCount: 0, // update with number of simultaneous tracks currently detected
-
-            hLastReported: -1,
-            positionH: ["--","--"],
-            boxH: [-100,-99,-100,-99], // keep it off screen
-            tempH: ["--"],
-            movedH: "--",
-
-            uLastReported: -1, // UTC time (milsec of epoch)
-            positionU: ["--","--"],
-            boxU: [-100,-99,-100,-99], // keep it off screen
-            tempU: "--",
-            movedU: "--",
+            temp: {
+                hotspot: 0,
+                atTemp: false,
+            },
+            heated: {
+                id: undefined,
+                lastReported: 0,
+                position: undefined,
+                box: undefined,
+                moved: 0,
+            },
+            unheated: {
+                id: undefined,
+                lastReported: 0,
+                position: undefined,
+                box: undefined,
+                moved: 0,
+            }, 
+            reset: {
+                id: undefined,
+                lastReported: 0,
+                position: undefined,
+                box: undefined,
+                moved: 0,
+            }
         }
         const trialConfigValues = {
             'duration':[0,0.5,1,2,3,4,5,10,15,20,25,30],
@@ -500,6 +514,7 @@
 
             if(showThermal) {thermalCamElement.style.display = "flex";} 
             else{thermalCamElement.style.display = "none";}
+            updateTargetBoxes();
         }
         function updateCameraButtonView(){
             var camViewSelectButtons = document.getElementsByClassName('cam-select-button');
@@ -590,20 +605,19 @@
         }
         function updateTargetInfoDisplay(){
             // count
-            document.getElementById("target-count").innerText = TARGET_INFO.targetCount;
+            document.getElementById("target-count").innerText = Object.keys(TRACKS).length;
 
             // position
-            document.getElementById("target-H-x-pos").innerText = TARGET_INFO.positionH[0];
-            document.getElementById("target-H-y-pos").innerText = TARGET_INFO.positionH[1];
-            document.getElementById("target-U-x-pos").innerText = TARGET_INFO.positionU[0];
-            document.getElementById("target-U-y-pos").innerText = TARGET_INFO.positionU[1];
+            document.getElementById("target-H-x-pos").innerText = TARGET_INFO.heated.position ? String(TARGET_INFO.heated.position[0]) : "--";
+            document.getElementById("target-H-y-pos").innerText = TARGET_INFO.heated.position ? String(TARGET_INFO.heated.position[1]) : "--";
+            document.getElementById("target-U-x-pos").innerText = TARGET_INFO.unheated.position ? String(TARGET_INFO.unheated.position[0]) : "--";
+            document.getElementById("target-U-y-pos").innerText = TARGET_INFO.unheated.position ? String(TARGET_INFO.unheated.position[1]) : "--";
+            document.getElementById("target-H-distance-moved").innerText = TARGET_INFO.heated.position ? String(TARGET_INFO.heated.moved) : "--";
+            document.getElementById("target-U-distance-moved").innerText = TARGET_INFO.unheated.position ? String(TARGET_INFO.unheated.moved) : "--";
 
             // temp and moved
-            document.getElementById("target-H-current-temp").innerText = TARGET_INFO.tempH;
-            // document.getElementById("target-U-current-temp").innerText = TARGET_INFO.tempU; // not used
-            
-            document.getElementById("target-H-distance-moved").innerText = TARGET_INFO.movedH;
-            document.getElementById("target-U-distance-moved").innerText = TARGET_INFO.movedU;
+            document.getElementById("target-H-current-temp").innerText = TARGET_INFO.temp.hotspot;
+            document.getElementById("target-H-heating-status").innerText = trialConfig.temperature == 0 || TARGET_INFO.temp.atTemp ? "stable" : "heating";
         }
         function setStatusAreaColor(color){
             document.getElementById('status-area').style.backgroundColor=color;
@@ -615,13 +629,6 @@
         // clears specified indicator by setting background to transparent
         function clearIndicator(index) {
             var indicator=document.getElementsByClassName('indicator-light')[index].firstChild.style.backgroundColor = "transparent";
-        }
-        function enablePrimaryActionButton(enable){
-            if(enable) {
-                document.getElementById("primary-action-button").removeAttribute("disabled");
-            } else {
-                document.getElementById("primary-action-button").setAttribute("disabled", "disabled");
-            }
         }
         function setPrimaryActionButtonText(text){
             document.getElementById('primary-action-button-span').innerHTML = text;
@@ -744,8 +751,6 @@
             saveProfileEl.innerHTML = '<a id="save-profile-link" href="data:' + profileData + '" download="settings_'+dateString+'.json">download JSON</a>';
             document.getElementById('save-profile-link').click();
         }
-        var priorTrialName = "";
-        var priorTrialContent = "";
         function uploadTrial(){
             // implement google upload here
         }
@@ -916,7 +921,40 @@
                 showElement('resume-symbol', false);
             }
         }
-        function addTargetBox(trackId, colorString) {
+        function updateTargetBoxes() {
+            // Clears all target boxes then draws boxes for all currently detected tracks.
+            // Color is set if trackId matches with a current target, else it is gray as a potential target
+
+            for (trackId in DISPLAY_STATE.targetBoxElements) {
+                DISPLAY_STATE.targetBoxElements[trackId].remove();
+            }
+            for (let trackId in TRACKS) {
+                let color = "grey";
+                if (trackId == TARGET_INFO.heated.id) {
+                    color = "rgb(104,0,52)";
+                }
+                else if (trackId == TARGET_INFO.unheated.id) {
+                    color = "rgb(42,116,145)";
+                }
+                drawTargetBox(
+                    trackId, color,
+                    TRACKS[trackId].box[0], 
+                    TRACKS[trackId].box[1], 
+                    TRACKS[trackId].center[0], 
+                    TRACKS[trackId].center[1], 
+                    TRACKS[trackId].box[2], 
+                    TRACKS[trackId].box[3], 
+                );
+            }
+        }
+        function drawTargetBox(trackId, colorString, x1, y1, xt, yt, x2, y2) {
+            if(xt < x1 || xt > x2 || yt < y1 || yt > y2) {
+                console.log ("given target is not in specified box???");
+            }
+            if(x1 > x2 || y1 > y2) {                
+                console.log ("box coordinates invalid, can't draw box...");
+                return;
+            }
             let existingEl = document.getElementById("box-"+trackId);
             if(existingEl) {
                 existingEl.remove();
@@ -927,34 +965,27 @@
             boxEl.style['outline-offset'] = -1 * SYSTEM_SETTINGS.targetOutlineWidth + "vh";
             boxEl.style.position = "absolute"; 
             boxEl.style["z-index"] += 10000;
-            DISPLAY_STATE.targetBoxElements[trackId] = boxEl;
-            document.getElementById('left-section').prepend(boxEl);
-        }
-        function setTargetBoxPosition(trackId, x1, xt, x2, y1, yt, y2) {
-            if(xt < x1 || xt > x2 || yt < y1 || yt > y2) {
-                console.log ("given target not in box, can't draw crosshairs...");
-            }
-            if(x1 > x2 || y1 > y2) {                
-                console.log ("box coordinates invalid, can't draw box...");
-                return;
-            }
+
+
             let x = 0, y = 1;
             //  img size in vw / img size in camera pixels = vu per cam pixel
             let imgEl = document.getElementById('visible-cam-output');
             let scaleFactor = 100 * imgEl.clientWidth / window.innerWidth / SYSTEM_SETTINGS.visibleCamera.xResolution;
-            console.log('scale factor: ',scaleFactor);
             let boxCenterVW = [scaleFactor * (x1 + x2)/2, scaleFactor * (y1 + y2)/2];
             let boxSizeVW = [scaleFactor * (x2 - x1), scaleFactor * (y2 - y1)];
             let targetPositionVW = [scaleFactor * (xt), scaleFactor * yt];
             let imgOffset = [100 * imgEl.offsetLeft / window.innerWidth , 100 * imgEl.offsetTop / window.innerWidth];
            
-            let boxEl = document.getElementById("box-"+trackId);
             boxEl.style.width = boxSizeVW[x] + "vw";
             boxEl.style.height = boxSizeVW[y] + "vw";
             boxEl.style.left = imgOffset[x] + x1 * scaleFactor + "vw";
             boxEl.style.top = imgOffset[y] + y1 * scaleFactor + "vw";
 
-            // align the crosshairs...
+            DISPLAY_STATE.targetBoxElements[trackId] = boxEl;
+            document.getElementById('left-section').prepend(boxEl);
+
+
+            // align the crosshairs if doing that...
         }
 
 
@@ -981,13 +1012,31 @@
             document.getElementById('target-H-set-temp').innerHTML = tempString;
             showElements('#target-U-info, #second-placement-button', false);
             document.getElementById('first-placement-button').addEventListener('click',()=>{
-                if (TARGET_INFO.targetCount < 1) {
+                if (! Object.keys(TRACKS)[0]) {
                     setStatusAreaColor('rgb(200,180,0)');
                     setStatusAreaText('Target not detected. Please ensure at least one target is placed before continuing.');
                 } else {
-                    showElement("first-placement-button", false); showElement('target-U-info',true); showElement("second-placement-button",true); enableButton("second-placement-button", true);
+                    selectTrackAsTarget(Object.keys(TRACKS)[0], true);
+                    setStatusAreaColor("green");
+                    setStatusAreaText("Heated target identified.");
+                    showElement("first-placement-button", false); 
+                    showElement('target-U-info',true); 
+                    showElement("second-placement-button",true); 
+                    enableButton("second-placement-button", true);
                 }},false);
-            document.getElementById('second-placement-button').addEventListener('click',()=>{showElements('#first-placement-button, #second-placement-button', false); showElement('swap-target-button', true); enableButton("primary-action-button", true);},false);
+            document.getElementById('second-placement-button').addEventListener('click',()=>{
+                enableButton("primary-action-button", true);
+                if(! Object.keys(TRACKS)[1]) {
+                    setStatusAreaColor('rgb(200,180,0)');
+                    setStatusAreaText('Second target not detected. Try again, or select "Safety Checks" to proceed with one target for now.');
+                } else {
+                    setStatusAreaColor('green');
+                    setStatusAreaText('Unheated target identified.');
+                    selectTrackAsTarget(Object.keys(TRACKS)[1], false);
+                    showElements('#first-placement-button, #second-placement-button', false); 
+                    showElement('swap-target-button', true); 
+                }
+            },false);
             enableButton("first-placement-button", true);
             enableButton("second-placement-button", false);
             showCameraViewButtons(true);
@@ -1203,14 +1252,53 @@
         }
         TIMERS.statusUpdateTimer = setInterval(updateSystemStatus, SYSTEM_SETTINGS.statusUpdateInterval);
         
-        function updateTargetInfo() {
-            let tInfo = requestTargetInfo();
-            if(tInfo) {
-                TARGET_INFO = tInfo;
-            }
-            updateTargetInfoDisplay();
+        function selectTrackAsTarget(trackId, isHeated) {
+            TARGET_INFO[isHeated ? "heated" : "unheated"] = {id: trackId};
+            updateTargetInfoFromTracks();            
         }
-        TIMERS.targetInfoUpdateTimer = setInterval(updateTargetInfo, SYSTEM_SETTINGS.targetInfoUpdateInterval);
+        function clearTarget(isHeated) {
+            TARGET_INFO[isHeated ? "heated" : "unheated"] = TARGET_INFO.reset;
+        }
+        function updateTargetInfoFromTracks() {
+            let hi = TARGET_INFO.heated;
+            let ht = TRACKS[hi.id];
+            // if the heated track exists
+            if (ht) {
+                if(hi.position) {
+                    let dxh = ht.center[0] - TARGET_INFO.heated.position[0];
+                    let dyh = ht.center[1] - TARGET_INFO.heated.position[1];
+                    TARGET_INFO.heated.moved += Math.floor(Math.sqrt(Math.pow(dxh,2)+Math.pow(dyh,2)));
+                } else {
+                    TARGET_INFO.heated.moved = 0;
+                }
+                if (hi.id) {
+                    TARGET_INFO.heated.lastReported = ht.timestamp;
+                    TARGET_INFO.heated.position = ht.center;
+                    TARGET_INFO.heated.box = ht.box;
+                }
+            } else {
+                clearTarget(true);
+            }
+            let ui = TARGET_INFO.unheated;
+            let ut = TRACKS[ui.id];
+            if(ut) {
+                if(ui.position) { 
+                    let dxu = ut.center[0] - TARGET_INFO.unheated.position[0]
+                    let dyu = ut.center[1] - TARGET_INFO.unheated.position[1]
+                    TARGET_INFO.unheated.moved += Math.floor(Math.sqrt(Math.pow(dxu,2)+Math.pow(dyu,2)));
+                } else {
+                    TARGET_INFO.unheated.moved = 0;
+                }
+                if (ui.id) {
+                    TARGET_INFO.unheated.lastReported = ut.timestamp;
+                    TARGET_INFO.unheated.position = ut.center;
+                    TARGET_INFO.unheated.box = ut.box;
+                }
+            } else {
+                clearTarget(false);
+            }
+        }
+        TIMERS.targetInfoUpdateTimer = setInterval(()=>{updateTargetInfoFromTracks(); updateTargetInfoDisplay();}, SYSTEM_SETTINGS.targetInfoUpdateInterval);
         
 
 //********************************************************************
@@ -1323,16 +1411,14 @@
 
             // Uncomment this (and play with values) to test functionality:
             
-            return {
-                targetCount: 1, // update with number of simultaneous tracks currently detected
-                
-                hLastReported: new Date().getTime() - 6000,
+            return {                
+                lastReportedH: new Date().getTime() - 6000,
                 positionH: "--", // Note this could happen - if track of unheated target continues, 
                                         // but track of heated target ends and instrument finds no other track.
                 tempH: "--", // this is the deltaT, it's '--' if no track is identified for the heated target.
                 movedH: "--",
                 
-                uLastReported: new Date().getTime(), // UTC time (milsec of epoch)
+                lastReportedU: new Date().getTime(), // UTC time (milsec of epoch)
                 positionU: [5.0,-46.2],
                 // tempU: 27.4, // tempU unused
                 movedU: 31, // in mm during the last 3 seconds, this track only
