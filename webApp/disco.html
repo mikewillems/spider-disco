@@ -242,10 +242,11 @@
 
                     <div id="target-data-view"  class="view" style="margin:0; padding:0;">
                         <div id="target-count-div" style="margin-left:0.5em; margin-bottom:1em;">
-                            <span id="target-count">0</span>&nbsp;targets in view.
+                            <span id="target-count">0</span>&nbsp;objects in view.
                         </div>
-                        <div id="target-H-info" style="display:flex; flex-direction:column; align-items:center; justify-content:space-around;">
-                            <div style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:90%; text-align:center; color:rgb(104,0,52); border:2px solid rgb(104,0,52); font-weight:bold; font-size:110%;"><span>Target H</span></div>
+                        <div id="target-H-info" class="target-info-section" style="display:flex; flex-direction:column; align-items:center; justify-content:space-around;">
+                            <div id="target-H-heading" style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:90%; height:2em; text-align:center; color:rgb(104,0,52); border:2px solid rgb(104,0,52); font-weight:bold; font-size:110%;"><span>Target H</span><span>&#128393;</span></div>
+                            <div id="target-H-cancel" class="hidden" style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:90%; height:2em; text-align:center; color:rgb(104,0,52); border:2px solid rgb(104,0,52); font-weight:bold; font-size:110%;"><span>cancel</span></div>
                             <table style="margin-bottom:0.75em;">
                                 <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">&#916;T Set: </span></td><td><span id="target-H-set-temp">--</span></td></tr>
                                 <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">&#916;T: </span></td><td><span id="target-H-current-temp">--</span>&#8451;</td></tr>
@@ -254,8 +255,9 @@
                                 <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(104,0,52);">Moved: </span></td><td><span id="target-H-distance-moved">--</span>mm</td></tr>
                             </table>
                         </div>
-                        <div id="target-U-info" style="display:flex; flex-direction:column; align-items:center; justify-content:space-around;">
-                            <div style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:90%; text-align:center; color:rgb(42,116,145); border:2px solid rgb(42,116,145); font-weight:bold; font-size:110%;"><span>Target U</span></div>
+                        <div id="target-U-info" class="target-info-section" style="display:flex; flex-direction:column; align-items:center; justify-content:space-around;">
+                            <div id="target-U-heading" style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:90%; height:2em; text-align:center; color:rgb(42,116,145); border:2px solid rgb(42,116,145); font-weight:bold; font-size:110%;"><span>Target U</span><span>&#128393;</span></div>
+                            <div id="target-U-cancel" class="hidden" style="display:flex; flex-direction:row; justify-content:space-evenly; align-items:center; width:90%; height:2em; text-align:center; color:rgb(42,116,145); border:2px solid rgb(42,116,145); font-weight:bold; font-size:110%;"><span>cancel</span></div>
                             <table style="margin-bottom:0.75em;">
                                 <!--<tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">Ambient: </span></td><td><span id="target-U-current-temp">--</span>&#8451;</td></tr>-->
                                 <tr><td style="text-align:right;"><span style="font-weight:bold; color:rgb(42,116,145);">(x,y): </span></td><td><span id="target-U-x-pos">--</span>mm,<span id="target-U-y-pos">--</span>mm</td></tr>
@@ -388,7 +390,8 @@
                 position: undefined,
                 box: undefined,
                 moved: 0,
-            }
+            },
+            select: undefined,
         }
         const trialConfigValues = {
             'duration':[0,0.5,1,2,3,4,5,10,15,20,25,30],
@@ -440,12 +443,8 @@
             },
             'placement':{
                 'title':'Specimen Loading',
-                'instructions':'',
-                'content':
-                    `<div>
-                        <button id="first-placement-button" class="sub-step-button">Heated Target has been placed.</button>
-                        <button id="second-placement-button" class="sub-step-button" disabled="disabled">Unheated target has been placed.</button>
-                    </div>`,
+                'instructions':'Load, then tap headings to pick targets.',
+                'content':``,
                 'view':'target-data-view',
                 'actionButtonText':'Safety Checks',
                 'initialize':initPlacementStep,
@@ -602,22 +601,6 @@
             statusArea.appendChild(getSpan('elapsed-time-span', elapsedTimeDisplay));
             statusArea.appendChild(getSpan('status-spacer-span', statusSpacer));
             statusArea.appendChild(getSpan('trial-length-span', trialLengthDisplay));
-        }
-        function updateTargetInfoDisplay(){
-            // count
-            document.getElementById("target-count").innerText = Object.keys(TRACKS).length;
-
-            // position
-            document.getElementById("target-H-x-pos").innerText = TARGET_INFO.heated.position ? String(TARGET_INFO.heated.position[0]) : "--";
-            document.getElementById("target-H-y-pos").innerText = TARGET_INFO.heated.position ? String(TARGET_INFO.heated.position[1]) : "--";
-            document.getElementById("target-U-x-pos").innerText = TARGET_INFO.unheated.position ? String(TARGET_INFO.unheated.position[0]) : "--";
-            document.getElementById("target-U-y-pos").innerText = TARGET_INFO.unheated.position ? String(TARGET_INFO.unheated.position[1]) : "--";
-            document.getElementById("target-H-distance-moved").innerText = TARGET_INFO.heated.position ? String(TARGET_INFO.heated.moved) : "--";
-            document.getElementById("target-U-distance-moved").innerText = TARGET_INFO.unheated.position ? String(TARGET_INFO.unheated.moved) : "--";
-
-            // temp and moved
-            document.getElementById("target-H-current-temp").innerText = TARGET_INFO.temp.hotspot;
-            document.getElementById("target-H-heating-status").innerText = trialConfig.temperature == 0 || TARGET_INFO.temp.atTemp ? "stable" : "heating";
         }
         function setStatusAreaColor(color){
             document.getElementById('status-area').style.backgroundColor=color;
@@ -928,7 +911,7 @@
             for (trackId in DISPLAY_STATE.targetBoxElements) {
                 DISPLAY_STATE.targetBoxElements[trackId].remove();
             }
-            for (let trackId in TRACKS) {
+            for (var trackId in TRACKS) {
                 let color = "grey";
                 if (trackId == TARGET_INFO.heated.id) {
                     color = "rgb(104,0,52)";
@@ -987,6 +970,83 @@
 
             // align the crosshairs if doing that...
         }
+        function selectTrackAsTarget(trackId, isHeated) {
+            let hId = TARGET_INFO.heated.id;
+            let uId = TARGET_INFO.unheated.id;
+            let tInfo = TARGET_INFO[isHeated ? "heated" : "unheated"];
+            if (tInfo.id == trackId) {
+                return;
+            }
+            if(isHeated && trackId == uId || !isHeated && trackId == hId) {
+                let oldHeatedTarget = JSON.parse(JSON.stringify(TARGET_INFO.heated));
+                TARGET_INFO.heated = JSON.parse(JSON.stringify(TARGET_INFO.unheated));
+                TARGET_INFO.unheated = oldHeatedTarget;
+            } else {
+                clearTarget(isHeated);
+                TARGET_INFO[isHeated ? "heated" : "unheated"].id = trackId;
+            }
+            updateTargetInfoFromTracks();            
+        }
+        function clearTarget(isHeated) {
+            TARGET_INFO[isHeated ? "heated" : "unheated"] = JSON.parse(JSON.stringify(TARGET_INFO.reset));
+        }
+        function listenCancelPick(e) {
+            cancelPick();
+            e.stopPropagation();
+            setInstructionText('Action canceled, target not chosen.');
+        }
+        function cancelPick() {
+            TARGET_INFO.select = undefined;
+            showElement('target-H-heading', true);
+            showElement('target-H-cancel', false);
+            showElement('target-U-heading', true);
+            showElement('target-U-cancel', false);
+        }
+        function pickHeated(e) {
+            if (TARGET_INFO.select == undefined) {
+                TARGET_INFO.select = true;
+                setInstructionText('Now pick the heated target on the display.');
+                showElement('target-H-heading', false);
+                showElement('target-H-cancel', true);
+                document.addEventListener('click', handleTargetSelection, true);
+            } else {
+                TARGET_INFO.select = undefined;
+                listenCancelPick(e);
+            }
+        }
+        function pickUnheated(e) {
+            if (TARGET_INFO.select == undefined) {
+                TARGET_INFO.select = false;
+                setInstructionText('Now pick the unheated target on the display.');
+                showElement('target-U-heading', false);
+                showElement('target-U-cancel', true);
+                document.addEventListener('click', handleTargetSelection, true);
+            } else {
+                TARGET_INFO.select = undefined;
+                listenCancelPick(e);
+            }
+        }
+        var x;
+        function handleTargetSelection(e) {
+            document.removeEventListener('click', handleTargetSelection, true);
+            e.stopPropagation();
+            x = e;
+            let isHeated = TARGET_INFO.select;
+            if (e.target.id.split('-')[0] == "box") {
+                let trackId = e.target.id.split('-')[1];
+                selectTrackAsTarget(trackId, isHeated);
+                setInstructionText((isHeated ? "Heated" : "Unheated") + ' target set.');
+                TARGET_INFO.select = undefined;
+                showElement('target-H-heading', true);
+                showElement('target-H-cancel', false);
+                showElement('target-U-heading', true);
+                showElement('target-U-cancel', false);
+            } else {
+                TARGET_INFO.select = undefined;
+                listenCancelPick(e);
+                setInstructionText('Try again.');
+            }
+        }
 
 
 
@@ -1010,38 +1070,9 @@
             if (trialConfig.temperature == trialConfigValues.temperature.length - 1) {tempString = "max possible";}
             else if (trialConfig.temperature > 0) {tempString = trialConfigValues.temperature[trialConfig.temperature] + '&#8451;';}
             document.getElementById('target-H-set-temp').innerHTML = tempString;
-            showElements('#target-U-info, #second-placement-button', false);
-            document.getElementById('first-placement-button').addEventListener('click',()=>{
-                if (! Object.keys(TRACKS)[0]) {
-                    setStatusAreaColor('rgb(200,180,0)');
-                    setStatusAreaText('Target not detected. Please ensure at least one target is placed before continuing.');
-                } else {
-                    selectTrackAsTarget(Object.keys(TRACKS)[0], true);
-                    setStatusAreaColor("green");
-                    setStatusAreaText("Heated target identified.");
-                    showElement("first-placement-button", false); 
-                    showElement('target-U-info',true); 
-                    showElement("second-placement-button",true); 
-                    enableButton("second-placement-button", true);
-                }},false);
-            document.getElementById('second-placement-button').addEventListener('click',()=>{
-                enableButton("primary-action-button", true);
-                if(! Object.keys(TRACKS)[1]) {
-                    setStatusAreaColor('rgb(200,180,0)');
-                    setStatusAreaText('Second target not detected. Try again, or select "Safety Checks" to proceed with one target for now.');
-                } else {
-                    setStatusAreaColor('green');
-                    setStatusAreaText('Unheated target identified.');
-                    selectTrackAsTarget(Object.keys(TRACKS)[1], false);
-                    showElements('#first-placement-button, #second-placement-button', false); 
-                    showElement('swap-target-button', true); 
-                }
-            },false);
-            enableButton("first-placement-button", true);
-            enableButton("second-placement-button", false);
             showCameraViewButtons(true);
             updateCameraView();
-            enableButton("primary-action-button", false);
+            enableButton("primary-action-button", true);
         }
         function initSafetyStep(){
             enableButton("primary-action-button", false);
@@ -1157,7 +1188,10 @@
             document.getElementById('calibrate-button').addEventListener('click',()=>{calibrateSystem();},false);
 
             // placement
-            document.getElementById('swap-target-button').addEventListener('click',swapHeated,false);
+            document.getElementById('target-H-info').addEventListener('click', pickHeated, false);
+            document.getElementById('target-U-info').addEventListener('click', pickUnheated, false);
+            document.getElementById('target-H-cancel').addEventListener('click', cancelPick, true);
+            document.getElementById('target-U-cancel').addEventListener('click', cancelPick, true);
 
             // safety
             var safetyStepsCompleted = document.getElementsByClassName('completed-safety-step');
@@ -1186,22 +1220,6 @@
 
         }
         initializeAppUI();
-
-
-
-        function testVisuals(turnOn){
-            if(turnOn) {
-                displayLaserArmedWarning();
-                showTrialProgress(68, 180);
-                setIndicator(0,false);
-                setIndicator(1,true);
-            } else {
-                clearPersistentAlerts();
-                clearStatusArea();
-                clearIndicator(0);
-                clearIndicator(1);
-            }
-        }
 
 
 // SYNCHRONIZATION
@@ -1250,14 +1268,7 @@
 
         }
         TIMERS.statusUpdateTimer = setInterval(updateSystemStatus, SYSTEM_SETTINGS.statusUpdateInterval);
-        
-        function selectTrackAsTarget(trackId, isHeated) {
-            TARGET_INFO[isHeated ? "heated" : "unheated"] = {id: trackId};
-            updateTargetInfoFromTracks();            
-        }
-        function clearTarget(isHeated) {
-            TARGET_INFO[isHeated ? "heated" : "unheated"] = TARGET_INFO.reset;
-        }
+
         function updateTargetInfoFromTracks() {
             let hi = TARGET_INFO.heated;
             let ht = TRACKS[hi.id];
@@ -1297,8 +1308,24 @@
                 clearTarget(false);
             }
         }
-        TIMERS.targetInfoUpdateTimer = setInterval(()=>{updateTargetInfoFromTracks(); updateTargetInfoDisplay();}, SYSTEM_SETTINGS.targetInfoUpdateInterval);
+        TIMERS.targetInfoUpdateTimer = setInterval(()=>{TRACKS = requestTargetInfo(); updateTargetInfoFromTracks(); updateTargetBoxes(); updateTargetInfoDisplay();}, SYSTEM_SETTINGS.targetInfoUpdateInterval);
         
+        function updateTargetInfoDisplay(){
+            // count
+            document.getElementById("target-count").innerText = Object.keys(TRACKS).length;
+
+            // position
+            document.getElementById("target-H-x-pos").innerText = TARGET_INFO.heated.position ? String(TARGET_INFO.heated.position[0]) : "--";
+            document.getElementById("target-H-y-pos").innerText = TARGET_INFO.heated.position ? String(TARGET_INFO.heated.position[1]) : "--";
+            document.getElementById("target-U-x-pos").innerText = TARGET_INFO.unheated.position ? String(TARGET_INFO.unheated.position[0]) : "--";
+            document.getElementById("target-U-y-pos").innerText = TARGET_INFO.unheated.position ? String(TARGET_INFO.unheated.position[1]) : "--";
+            document.getElementById("target-H-distance-moved").innerText = TARGET_INFO.heated.position ? String(TARGET_INFO.heated.moved) : "--";
+            document.getElementById("target-U-distance-moved").innerText = TARGET_INFO.unheated.position ? String(TARGET_INFO.unheated.moved) : "--";
+
+            // temp and moved
+            document.getElementById("target-H-current-temp").innerText = TARGET_INFO.temp.hotspot;
+            document.getElementById("target-H-heating-status").innerText = TARGET_INFO.heated.id ? (trialConfig.temperature == 0 || TARGET_INFO.temp.atTemp ? "stable" : "heating") : "--";
+        }
 
 //********************************************************************
 // BACKEND INTERFACE FUNCTIONS
@@ -1318,8 +1345,7 @@
                     let resp = response.json();
                     if (resp == "200") {
                         // OK
-                        setStatusAreaText(command + " command executed successfully.");
-                        setStatusAreaColor('green');
+                        console.log('Command ',command,' executed successfully.');
                     }
                     if (resp == "202") {
                         // ACCEPTED
@@ -1357,12 +1383,7 @@
             // maybe calibration.png or something
             sendCommand("CALIBRATE_SYSTEM");
         }
-        function swapHeated(){
-            let oldHeatedTarget = TARGET_INFO.heated;
-            TARGET_INFO.heated = TARGET_INFO.unheated;
-            TARGET_INFO.unheated = oldHeatedTarget;
-            sendCommand("SWAP_TARGETS");
-        }
+
         // config is a JSON object containing (at least) duration, temp, and power.
         // power is a percentage between 0 and 100 with 100 representing the max
         // power we allow the laser to be set at
@@ -1412,19 +1433,12 @@
         function requestTargetInfo() {
 
             // Uncomment this (and play with values) to test functionality:
+            let i = Math.floor(new Date().getTime() / 1000) % 25;
             
-            return {                
-                lastReportedH: new Date().getTime() - 6000,
-                positionH: "--", // Note this could happen - if track of unheated target continues, 
-                                        // but track of heated target ends and instrument finds no other track.
-                tempH: "--", // this is the deltaT, it's '--' if no track is identified for the heated target.
-                movedH: "--",
-                
-                lastReportedU: new Date().getTime(), // UTC time (milsec of epoch)
-                positionU: [5.0,-46.2],
-                // tempU: 27.4, // tempU unused
-                movedU: 31, // in mm during the last 3 seconds, this track only
-            } 
+            return {
+                "2":{"box":[100,i*10,150,i*10 + 50], "center":[125,i*10 + 25], "timestamp":0}, 
+                "3":{"box":[i*14,200,i*14+50,250], "center":[i*14+25,215], "timestamp":0}
+            };
 
             // uses fetch request "GET_TARGET_INFO"
 
