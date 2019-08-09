@@ -162,9 +162,9 @@
                 <div id="right-section-views-div" style="padding-left:1em; padding-right:1em; display:flex; flex-direction:column; justify-content: space-between;">
 
                     <div id="completed-trials-view"  class="view" style="">
-                        <input class="hidden" type="file" accept="*.json" id="past-trial-input"></input>
-                        <button id="review-trial-button" class="sub-step-button">Review past trial info</button><br/>
-                        <button id="upload-trial-button" class="sub-step-button">Upload trials to drive</button>
+                        Trials currently save to&nbsp;<span id="trial-output-path"></span><br/><br/>
+                        Open that folder to access results for transfer or email. 
+                        <button id="review-trial-button" class="sub-step-button">Browse past trials</button><br/>
                     </div>
 
                     <div id="trial-setup-view"  class="view">
@@ -321,6 +321,7 @@
 
         // CONTROL & STATUS
         const SYSTEM_SETTINGS = {
+            outputDirectory: "/home/disco/trials",
             timeoutMilSec: 1000,
             heartbeatInterval: 50,
             statusDisplayUpdateInterval: 250,
@@ -420,7 +421,7 @@
         const discoSteps = {
             'home':{
                 'title':'Welcome to the Disco!',
-                'instructions':'Select a prior trial to review or send, or start a new trial by choosing New Trial.',
+                'instructions':'Choose "New Trial" to start a test run.',
                 'view':'completed-trials-view',
                 'content':'',
                 'actionButtonText':'New Trial',
@@ -741,32 +742,8 @@
             saveProfileEl.innerHTML = '<a id="save-profile-link" href="data:' + profileData + '" download="settings_'+dateString+'.json">download JSON</a>';
             document.getElementById('save-profile-link').click();
         }
-        function uploadTrial(){
-            // implement google upload here
-        }
-        function listenForPastTrialInputChange(){
-            let pastTrialInput = document.getElementById('past-trial-input');
-            pastTrialInput.addEventListener('change', function (e) { 
-                let selectedTrialFile = pastTrialInput.files[0];
-                let name = selectedTrialFile.name;
-                let size = selectedTrialFile.size;
-                displayTrialDetails(name, size); 
-            }, false);
-        }
-        function reviewTrialMetadata(){
-            document.getElementById('past-trial-input').click();
-        }
-        function displayTrialDetails(name, size) {
-            let trialDetailsHTML = `
-            <div id="trial-details-div">
-                <br>
-                <strong>Trial Name:</strong><br>
-                `+name+`<br><br>
-                <strong>Size:</strong><br>
-                `+size+`
-            </div>
-            `;
-            setContent(trialDetailsHTML);
+        function openTrialFolder(){
+            sendCommand('BROWSE');
         }
         function listenForTestProfileFileInputChange(){
             var pastProfileInput = document.getElementById('past-profile-input');
@@ -1161,9 +1138,7 @@
             // One-time initialization for steps:
 
             // home
-            listenForPastTrialInputChange();
-            document.getElementById('upload-trial-button').addEventListener('click', uploadTrial, false);
-            document.getElementById('review-trial-button').addEventListener('click', reviewTrialMetadata, false);
+            document.getElementById('trial-output-path').innerText = SYSTEM_SETTINGS.outputDirectory;
 
             // setup
             listenForTestProfileFileInputChange();
