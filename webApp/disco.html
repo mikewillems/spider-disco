@@ -327,7 +327,7 @@
             cameraUpdateInterval: 100,
             targetDataUpdateInterval: 100,
             targetDisplayUpdateInterval: 50,
-            movementHistoryLength: 200,
+            movementHistoryLength: 100,
             ip: '127.0.0.1',
             port: '5000',
             targetOutlineWidth: 0.5,
@@ -1351,12 +1351,12 @@
             document.getElementById("target-count").innerText = Object.keys(TRACKS).length;
 
             // position
-            document.getElementById("target-H-x-pos").innerText = TARGET_INFO.heated.position ? String(TARGET_INFO.heated.position[0]) : "--";
-            document.getElementById("target-H-y-pos").innerText = TARGET_INFO.heated.position ? String(TARGET_INFO.heated.position[1]) : "--";
-            document.getElementById("target-U-x-pos").innerText = TARGET_INFO.unheated.position ? String(TARGET_INFO.unheated.position[0]) : "--";
-            document.getElementById("target-U-y-pos").innerText = TARGET_INFO.unheated.position ? String(TARGET_INFO.unheated.position[1]) : "--";
-            document.getElementById("target-H-distance-moved").innerText = TARGET_INFO.heated.position ? (TARGET_INFO.heated.moved).toFixed(2) : "--";
-            document.getElementById("target-U-distance-moved").innerText = TARGET_INFO.unheated.position ? (TARGET_INFO.unheated.moved).toFixed(2) : "--";
+            document.getElementById("target-H-x-pos").innerText = TARGET_INFO.heated.position ? (TARGET_INFO.heated.position[0]).toFixed(1) : "--";
+            document.getElementById("target-H-y-pos").innerText = TARGET_INFO.heated.position ? (TARGET_INFO.heated.position[1]).toFixed(1) : "--";
+            document.getElementById("target-U-x-pos").innerText = TARGET_INFO.unheated.position ? (TARGET_INFO.unheated.position[0]).toFixed(1) : "--";
+            document.getElementById("target-U-y-pos").innerText = TARGET_INFO.unheated.position ? (TARGET_INFO.unheated.position[1]).toFixed(1) : "--";
+            document.getElementById("target-H-distance-moved").innerText = TARGET_INFO.heated.position ? (TARGET_INFO.heated.moved).toFixed(1) : "--";
+            document.getElementById("target-U-distance-moved").innerText = TARGET_INFO.unheated.position ? (TARGET_INFO.unheated.moved).toFixed(1) : "--";
 
             // temp and moved
             document.getElementById("target-H-current-temp").innerText = TARGET_INFO.temp.hotspot;
@@ -1473,7 +1473,7 @@
             
             return {
                 "2":{"box":[100,i*2,150,i*2 + 50], "center":[125,i*2 + 25], "timestamp":0}, 
-                "3":{"box":[Math.floor(i*2.8),200,Math.floor(i*2.8)+50,250], "center":[i*Math.floor(2.8)+25,215], "timestamp":0}
+                "3":{"box":[i*2.8,200,i*2.8+50,250], "center":[i*2.8+25,215], "timestamp":0}
             };
 
             // 
