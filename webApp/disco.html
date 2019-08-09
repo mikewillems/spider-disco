@@ -325,7 +325,9 @@
             heartbeatInterval: 50,
             statusUpdateInterval: 250,
             cameraUpdateInterval: 100,
-            targetInfoUpdateInterval: 500,
+            targetDataUpdateInterval: 100,
+            targetDisplayUpdateInterval: 50,
+            movementHistoryLength: 200,
             ip: '127.0.0.1',
             port: '5000',
             targetOutlineWidth: 0.5,
@@ -362,7 +364,8 @@
             heartbeatTimer: null,
             statusUpdateTimer: null,
             cameraUpdateTimer: null,
-            targetInfoUpdateTimer: null,
+            targetDisplayUpdateTimer: null,
+            targetDataUpdateTimer: null,
         }
         var TRACKS = {}
         var TARGET_INFO = {
@@ -375,6 +378,7 @@
                 lastReported: 0,
                 position: undefined,
                 box: undefined,
+                recentMovement: [],
                 moved: 0,
             },
             unheated: {
@@ -382,6 +386,7 @@
                 lastReported: 0,
                 position: undefined,
                 box: undefined,
+                recentMovement: [],
                 moved: 0,
             }, 
             reset: {
@@ -389,6 +394,7 @@
                 lastReported: 0,
                 position: undefined,
                 box: undefined,
+                recentMovement: [],
                 moved: 0,
             },
             select: undefined,
@@ -1281,8 +1287,18 @@
                 if(hi.position) {
                     let dxh = ht.center[0] - TARGET_INFO.heated.position[0];
                     let dyh = ht.center[1] - TARGET_INFO.heated.position[1];
-                    TARGET_INFO.heated.moved += Math.floor(Math.sqrt(Math.pow(dxh,2)+Math.pow(dyh,2)));
+                    // in pixels
+                    let thisMove = Math.floor(100 * Math.sqrt(Math.pow(dxh,2)+Math.pow(dyh,2))) / 100;
+                    //convert to mm
+                    thisMove = Math.floor(100 * thisMove / 3) / 100;
+                    TARGET_INFO.heated.recentMovement.push(thisMove);
+                    TARGET_INFO.heated.moved += thisMove;
+                    if (TARGET_INFO.heated.recentMovement.length > SYSTEM_SETTINGS.movementHistoryLength) {
+                        TARGET_INFO.heated.moved -= TARGET_INFO.heated.recentMovement[0];
+                        TARGET_INFO.heated.recentMovement = TARGET_INFO.heated.recentMovement.slice(1);
+                    }
                 } else {
+                    TARGET_INFO.heated.recentMovement = [];
                     TARGET_INFO.heated.moved = 0;
                 }
                 if (hi.id) {
@@ -1299,8 +1315,18 @@
                 if(ui.position) { 
                     let dxu = ut.center[0] - TARGET_INFO.unheated.position[0]
                     let dyu = ut.center[1] - TARGET_INFO.unheated.position[1]
-                    TARGET_INFO.unheated.moved += Math.floor(Math.sqrt(Math.pow(dxu,2)+Math.pow(dyu,2)));
+                    // in pixels
+                    let thisMoveU = Math.floor(100 * Math.sqrt(Math.pow(dxu,2)+Math.pow(dyu,2))) / 100;
+                    //convert to mm
+                    thisMoveU = Math.floor(100 * thisMoveU / 3) / 100;
+                    TARGET_INFO.unheated.recentMovement.push(thisMoveU);
+                    TARGET_INFO.unheated.moved += thisMoveU;
+                    if (TARGET_INFO.unheated.recentMovement.length > SYSTEM_SETTINGS.movementHistoryLength) {
+                        TARGET_INFO.unheated.moved -= TARGET_INFO.unheated.recentMovement[0];
+                        TARGET_INFO.unheated.recentMovement = TARGET_INFO.unheated.recentMovement.slice(1);
+                    }
                 } else {
+                    TARGET_INFO.unheated.recentMovement = [];
                     TARGET_INFO.unheated.moved = 0;
                 }
                 if (ui.id) {
@@ -1313,12 +1339,12 @@
             }
         }
 
-        TIMERS.targetInfoUpdateTimer = setInterval(()=>{
+        TIMERS.targetDataUpdateTimer = setInterval(()=>{
                 TRACKS = requestTargetInfo(); 
                 updateTargetInfoFromTracks(); 
                 updateTargetBoxes(); 
                 updateTargetInfoDisplay();
-            }, SYSTEM_SETTINGS.targetInfoUpdateInterval);
+            }, SYSTEM_SETTINGS.targetDataUpdateInterval);
         
         function updateTargetInfoDisplay(){
             // count
@@ -1329,8 +1355,8 @@
             document.getElementById("target-H-y-pos").innerText = TARGET_INFO.heated.position ? String(TARGET_INFO.heated.position[1]) : "--";
             document.getElementById("target-U-x-pos").innerText = TARGET_INFO.unheated.position ? String(TARGET_INFO.unheated.position[0]) : "--";
             document.getElementById("target-U-y-pos").innerText = TARGET_INFO.unheated.position ? String(TARGET_INFO.unheated.position[1]) : "--";
-            document.getElementById("target-H-distance-moved").innerText = TARGET_INFO.heated.position ? String(TARGET_INFO.heated.moved) : "--";
-            document.getElementById("target-U-distance-moved").innerText = TARGET_INFO.unheated.position ? String(TARGET_INFO.unheated.moved) : "--";
+            document.getElementById("target-H-distance-moved").innerText = TARGET_INFO.heated.position ? (TARGET_INFO.heated.moved).toFixed(2) : "--";
+            document.getElementById("target-U-distance-moved").innerText = TARGET_INFO.unheated.position ? (TARGET_INFO.unheated.moved).toFixed(2) : "--";
 
             // temp and moved
             document.getElementById("target-H-current-temp").innerText = TARGET_INFO.temp.hotspot;
@@ -1443,11 +1469,11 @@
         function requestTargetInfo() {
 
             // Uncomment this (and play with values) to test functionality:
-            let i = Math.floor(new Date().getTime() / 1000) % 25;
+            let i = Math.floor(new Date().getTime() / 200) % 125;
             
             return {
-                "2":{"box":[100,i*10,150,i*10 + 50], "center":[125,i*10 + 25], "timestamp":0}, 
-                "3":{"box":[i*14,200,i*14+50,250], "center":[i*14+25,215], "timestamp":0}
+                "2":{"box":[100,i*2,150,i*2 + 50], "center":[125,i*2 + 25], "timestamp":0}, 
+                "3":{"box":[Math.floor(i*2.8),200,Math.floor(i*2.8)+50,250], "center":[i*Math.floor(2.8)+25,215], "timestamp":0}
             };
 
             // 
