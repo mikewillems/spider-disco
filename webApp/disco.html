@@ -323,7 +323,7 @@
         const SYSTEM_SETTINGS = {
             timeoutMilSec: 500,
             heartbeatInterval: 50,
-            statusUpdateInterval: 250,
+            statusDisplayUpdateInterval: 250,
             cameraUpdateInterval: 100,
             targetDataUpdateInterval: 100,
             targetDisplayUpdateInterval: 50,
@@ -362,7 +362,7 @@
         };
         var TIMERS = {
             heartbeatTimer: null,
-            statusUpdateTimer: null,
+            statusDisplayUpdateTimer: null,
             cameraUpdateTimer: null,
             targetDisplayUpdateTimer: null,
             targetDataUpdateTimer: null,
@@ -1137,7 +1137,7 @@
                     STATUS.timeInTrial += intervalTime;
                     showTrialProgress(STATUS.timeInTrial, trialDurationSeconds);
                 }
-                updateSystemStatus();
+                updateSystemStatusDisplay();
                 if (STATUS.timeInTrial > trialDurationSeconds) {
                     concludeTrial();
                 }
@@ -1242,17 +1242,7 @@
         }
         TIMERS.cameraUpdateTimer = setInterval(refreshCameraImages, SYSTEM_SETTINGS.cameraUpdateInterval);
 
-        function updateSystemStatus() {
-            let status = requestStatus();
-            if(status && status.timestamp && status.timestamp > STATUS.timeLastResponded) {
-                STATUS.isArmed = status.isArmed;
-                STATUS.timeLastResponded = status.timestamp;
-                STATUS.isAlive = status.isAlive; // this refers to the laser HBM signal
-                STATUS.remoteEnabled = status.remoteEnabled;
-                STATUS.diskSpace = status.diskSpace;
-            } else {
-                setIndicator(0, false);
-            }
+        function updateSystemStatusDisplay() {
             if (new Date().getTime() - STATUS.timeLastResponded > SYSTEM_SETTINGS.timeoutMilSec) {
                 if(STATUS.isConnected) {
                     STATUS.isConnected = false;
@@ -1263,9 +1253,9 @@
                 STATUS.isConnected = true;
                 setIndicator(0, true);
             }
-            if (STATUS.laserIsSetToOn || status.isAlive) {
+            if (STATUS.laserIsSetToOn || STATUS.isAlive) {
                 displayLaserActiveWarning();
-                if (status.isAlive) {
+                if (STATUS.isAlive) {
                     setIndicator(2, true);
                 } else { setIndicator(2, false); }
             } else if (STATUS.isArmed) {
@@ -1278,7 +1268,7 @@
             } else { setIndicator(1, true); }
 
         }
-        TIMERS.statusUpdateTimer = setInterval(updateSystemStatus, SYSTEM_SETTINGS.statusUpdateInterval);
+        TIMERS.statusDisplayUpdateTimer = setInterval(updateSystemStatusDisplay, SYSTEM_SETTINGS.statusDisplayUpdateInterval);
 
         function updateTargetInfoFromData() {
             let hi = TARGET_INFO.heated;
@@ -1434,7 +1424,9 @@
         function stopLaser(){
             if (STATUS.laserIsSetToOn) {
                 sendCommand("STOP_LASER");
-                clearPersistentAlerts();
+                if (STATUS.isConnected) {
+                    clearPersistentAlerts();
+                }
             }
             STATUS.laserIsSetToOn = false;
         }
@@ -1486,22 +1478,6 @@
             }
         }
 
-
-        function getStatus() {
-            // retrieves status from status file for isArmed, remoteEnabled, isAlive, diskSpace and timestamp.
-            /* calculates:  
-                PC connected - looks for a return signal and checks time stamp - delay > threshold counts as disconnect)
-            */
-            // NOTE THESE ARE ALL TEST VALUES - NOT YET IMPLEMENTED! Real function should read each of these from the API.
-            return {
-                isArmed: false,
-                isAlive: false,
-                remoteEnabled: true,
-                timestamp: new Date().getTime() - 75, // for example, testing with a 75 ms latency
-                diskSpace: 20,
-            }
-        }
-
         function mockTargetInfo() {
 
             // Uncomment this (and play with values) to test functionality:
@@ -1520,15 +1496,16 @@
             let statusString = sendRequest('status');
             if (statusString) {
                 let status = JSON.parse(statusString);
-                let visible = status.visible;
-                let thermal = status.thermal;
-                let laser = status.laser;
+                let visible = status.visible[0];
+                let thermal = status.thermal[0];
+                let laser = status.laser[0];
+                let instrument = status.instrument // << Add this to API with controls / disk info
                 var newTracks = {};
-                for (let i = 0; i < visible[0].results.length; i++) {
-                    let trackId = visible[0].results[i].id;
-                    let center = visible[0].results[i].center;
-                    let ts = visible[0].t;
-                    let box = visible[0].results[i].box;
+                for (let i = 0; i < visible.results.length; i++) {
+                    let trackId = visible.results[i].id;
+                    let center = visible.results[i].center;
+                    let ts = visible.t;
+                    let box = visible.results[i].box;
                     newTracks[trackId] = {
                         box:[box[0],box[1],box[2],box[3]],
                         center:[center[0],center[1]],
@@ -1536,8 +1513,21 @@
                     };
                 }
                 TRACKS = newTracks;
-                TARGET_INFO.temp.hotspot = thermal[0].temp_high;
-                TARGET_INFO.temp.atTemp = laser[0].d < dStabilityThreshold;
+                TARGET_INFO.temp.hotspot = thermal.temp_high;
+                TARGET_INFO.temp.atTemp = laser.d < dStabilityThreshold;
+
+                // SEE HERE for API details on instrument
+                STATUS.isArmed = instrument.armed;
+                STATUS.isAlive = instrument.hbm;
+                STATUS.remoteEnabled = instrument.enrem;
+                STATUS.timeLastResponded = Math.max(visible.t, thermal.t, laser.t);
+                STATUS.diskSpace = instrument.disk_space;
+                if(new Date().getTime() - STATUS.timeLastResponded > SYSTEM_SETTINGS.timeoutMilSec) {} else {
+                    setIndicator(0, false);
+                    STATUS.isConnected = false;
+                    stopLaser();
+                }
+                return true;
             }
             return false;
         }
