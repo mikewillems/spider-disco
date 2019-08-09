@@ -320,8 +320,24 @@
 // GLOBAL DATA MEMBERS
 
         // CONTROL & STATUS
+        const BACKEND_CONFIG = {
+            "output_dir": "/home/disco/trials",
+            "thermal.option_save_every_n": 10,
+            "thermal.option_process_every_n": 10,
+            "visible.option_save_every_n": 50,
+            "visible.option_process_every_n": 50,
+            "visible.option_threshold": 50,
+            "visible.option_min_area": 20,
+            "visible.option_max_area": 90,
+            "visible.option_blur_sigma": 1,
+            "visible.option_mask_path": "mask.png",
+            "laser.option_track_id": 1,
+            "laser.option_target_temp": 0,
+            "laser.option_enable": true, 
+            "laser.option_rpi_address": "pi@10.0.2.108",
+        }
+
         const SYSTEM_SETTINGS = {
-            outputDirectory: "/home/disco/trials",
             timeoutMilSec: 1000,
             heartbeatInterval: 50,
             statusDisplayUpdateInterval: 250,
@@ -837,7 +853,9 @@
 
         }
         function startTrial() {
-            
+            BACKEND_CONFIG["laser.option_track_id"] = TARGET_INFO.heated.id;
+            BACKEND_CONFIG["laser.option_enable"] = true;
+            sendConfig();
         }
         function stopTrialManually(){
             STATUS.isPaused = false;
@@ -969,7 +987,9 @@
                 clearTarget(isHeated);
                 TARGET_INFO[isHeated ? "heated" : "unheated"].id = trackId;
             }
-            updateTargetInfoFromData();            
+            updateTargetInfoFromData();
+            BACKEND_CONFIG["laser.option_track_id"] = TARGET_INFO.heated.id;
+            sendConfig();
         }
         function clearTarget(isHeated) {
             TARGET_INFO[isHeated ? "heated" : "unheated"] = JSON.parse(JSON.stringify(TARGET_INFO.reset));
@@ -1070,6 +1090,9 @@
                 document.getElementsByClassName("safety-step-button")[0].style.display = "none";
                 enableButton("primary-action-button", true);
             }
+            BACKEND_CONFIG["laser.option_enable"] = STATUS.laserIsSetToOn;
+            BACKEND_CONFIG["laser.option_target_temp"] = trialConfig.temperature;
+            BACKEND_CONFIG["laser.option_track_id"] = TARGET_INFO.heated.id;            
         }
         function initTrialStep(){
             if (!STATUS.isConnected) {
@@ -1138,7 +1161,7 @@
             // One-time initialization for steps:
 
             // home
-            document.getElementById('trial-output-path').innerText = SYSTEM_SETTINGS.outputDirectory;
+            document.getElementById('trial-output-path').innerText = BACKEND_CONFIG.output_dir;
 
             // setup
             listenForTestProfileFileInputChange();
@@ -1335,12 +1358,12 @@
         requests: GET_TARGET_INFO, GET_STATUS
         */
 
-        function sendCommand(command) {
+        function sendCommand(command, payload) {
             
             // this line specs the command API - http://ip_address:port/commands/SOME_COMMAND
             var commandPromise = false;
             try {
-                commandPromise = fetch('http://'+SYSTEM_SETTINGS.ip+':'+SYSTEM_SETTINGS.port+'/commands/'+command, {method:"post", body:String(new Date().getTime())})
+                commandPromise = fetch('http://'+SYSTEM_SETTINGS.ip+':'+SYSTEM_SETTINGS.port+'/commands/'+command, {method:"post", body: payload ? JSON.stringify(payload) : String(new Date().getTime())})
                 .then(function(response) {
                     let resp = response.json();
                     if (resp == "200") {
@@ -1377,6 +1400,10 @@
             }
         }
 
+        function sendConfig() {
+            sendCommand('RECONFIGURE', BACKEND_CONFIG);
+        }
+
         function calibrateSystem(){
             // take this out? requests some alignment image to check that coordinates are overlapped? 
             // I think that would be useful to make sure nothing is awry and allow user calibration.
@@ -1396,6 +1423,7 @@
         }
         function stopLaser(){
             if (STATUS.laserIsSetToOn) {
+                BACKEND_CONFIG["laser.option_enable"] = STATUS.laserIsSetToOn; 
                 sendCommand("STOP_LASER");
                 if (STATUS.isConnected) {
                     clearPersistentAlerts();
