@@ -1312,7 +1312,13 @@
                 clearTarget(false);
             }
         }
-        TIMERS.targetInfoUpdateTimer = setInterval(()=>{TRACKS = requestTargetInfo(); updateTargetInfoFromTracks(); updateTargetBoxes(); updateTargetInfoDisplay();}, SYSTEM_SETTINGS.targetInfoUpdateInterval);
+
+        TIMERS.targetInfoUpdateTimer = setInterval(()=>{
+                TRACKS = requestTargetInfo(); 
+                updateTargetInfoFromTracks(); 
+                updateTargetBoxes(); 
+                updateTargetInfoDisplay();
+            }, SYSTEM_SETTINGS.targetInfoUpdateInterval);
         
         function updateTargetInfoDisplay(){
             // count
@@ -1344,7 +1350,7 @@
             // this line specs the command API - http://ip_address:port/commands/SOME_COMMAND
             var commandPromise = false;
             try {
-                commandPromise = fetch('http://'+SYSTEM_SETTINGS.ip+':'+SYSTEM_SETTINGS.port+'/commands/'+command)
+                commandPromise = fetch('http://'+SYSTEM_SETTINGS.ip+':'+SYSTEM_SETTINGS.port+'/commands/'+command, {method:"post", body:String(new Date().getTime())})
                 .then(function(response) {
                     let resp = response.json();
                     if (resp == "200") {
@@ -1444,7 +1450,7 @@
                 "3":{"box":[i*14,200,i*14+50,250], "center":[i*14+25,215], "timestamp":0}
             };
 
-            // uses fetch request "GET_TARGET_INFO"
+            // 
 
         }
 
