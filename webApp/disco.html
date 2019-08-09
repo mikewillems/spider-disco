@@ -436,9 +436,19 @@
                 'instructions':'Place the calibration tool in the center of the arena, then position the disco machine so that the entire arena floor is unobscured in the mask to the left.',
                 'view':'calibration-view',
                 'content':'',
-                'actionButtonText':'Specimen Loading',
+                'actionButtonText':'Safety Checks',
                 'initialize':initCalibrationStep,
                 'previousStep':'setup',
+                'nextStep':'safety',
+            },
+            'safety':{
+                'title':'Safety Checks',
+                'instructions':'This instrument uses a 500mW 808nm NIR laser that can permanently damage eyes.',
+                'view':'safety-check-view',
+                'content':'',
+                'actionButtonText':'Specimen Loading',
+                'initialize':initSafetyStep,
+                'previousStep':'calibration',
                 'nextStep':'placement',
             },
             'placement':{
@@ -446,21 +456,11 @@
                 'instructions':'Load, then tap headings to pick targets.',
                 'content':``,
                 'view':'target-data-view',
-                'actionButtonText':'Safety Checks',
-                'initialize':initPlacementStep,
-                'previousStep':'calibration',
-                'nextStep':'safety',
-                // Individual sub-steps: Remove the calibration tool and place the specimen to be heated in the arena. Now place the unheated specimen in the arena.
-            },
-            'safety':{
-                'title':'Safety Checks',
-                'instructions':'This instrument uses a 500mW 808nm NIR laser that can permanently damage eyes.',
-                'view':'safety-check-view',
-                'content':'',
                 'actionButtonText':'START TRIAL',
-                'initialize':initSafetyStep,
-                'previousStep':'placement',
+                'initialize':initPlacementStep,
+                'previousStep':'safety',
                 'nextStep':'trial',
+                // Individual sub-steps: Remove the calibration tool and place the specimen to be heated in the arena. Now place the unheated specimen in the arena.
             },
             'trial':{
                 'title':'Trial in Progress',
@@ -867,6 +867,8 @@
             showElement("right-arrow-span", true);
             showElement("secondary-action-button", true);   
             stopLaser();
+            clearTarget(true);
+            clearTarget(false);
             clearInterval(TIMERS.heartbeatTimer);
             clearStatusArea();
             document.getElementById('primary-action-button').removeEventListener('click', stopTrialManually);
@@ -1075,6 +1077,8 @@
             enableButton("primary-action-button", true);
         }
         function initSafetyStep(){
+            showCameraViewButtons(true);
+            updateCameraView();
             enableButton("primary-action-button", false);
             document.getElementsByClassName('safety-step-text')[0].style.display = "flex";
             document.getElementsByClassName('safety-step-button')[0].style.display = "flex";
