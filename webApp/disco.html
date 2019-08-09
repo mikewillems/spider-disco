@@ -372,6 +372,7 @@
             temp: {
                 hotspot: 0,
                 atTemp: false,
+                dStabilityThreshold: 0.01,
             },
             heated: {
                 id: undefined,
@@ -993,7 +994,7 @@
                 clearTarget(isHeated);
                 TARGET_INFO[isHeated ? "heated" : "unheated"].id = trackId;
             }
-            updateTargetInfoFromTracks();            
+            updateTargetInfoFromData();            
         }
         function clearTarget(isHeated) {
             TARGET_INFO[isHeated ? "heated" : "unheated"] = JSON.parse(JSON.stringify(TARGET_INFO.reset));
@@ -1279,7 +1280,7 @@
         }
         TIMERS.statusUpdateTimer = setInterval(updateSystemStatus, SYSTEM_SETTINGS.statusUpdateInterval);
 
-        function updateTargetInfoFromTracks() {
+        function updateTargetInfoFromData() {
             let hi = TARGET_INFO.heated;
             let ht = TRACKS[hi.id];
             // if the heated track exists
@@ -1340,8 +1341,8 @@
         }
 
         TIMERS.targetDataUpdateTimer = setInterval(()=>{
-                TRACKS = requestTargetInfo(); 
-                updateTargetInfoFromTracks(); 
+                updateDataFromInstrument(); 
+                updateTargetInfoFromData(); 
                 updateTargetBoxes(); 
                 updateTargetInfoDisplay();
             }, SYSTEM_SETTINGS.targetDataUpdateInterval);
@@ -1445,11 +1446,48 @@
         // request API - http://ip_address:port/requests/GET_STATUS, http://ip_address:port/requests/GET_TARGET_INFO 
 
         function sendRequest(request) {
-
+            // this line specs the command API - http://ip_address:port/commands/SOME_COMMAND
+            var commandPromise = false;
+            try {
+                commandPromise = fetch('http://'+SYSTEM_SETTINGS.ip+':'+SYSTEM_SETTINGS.port+'/'+request, {method:"get", body:String(new Date().getTime())})
+                .then(function(response) {
+                    let resp = response.json();
+                    if (resp == "200") {
+                        // OK
+                        console.log('Request ',request,' executed successfully.');
+                    }
+                    if (resp == "202") {
+                        // ACCEPTED
+                        setStatusAreaText(request + " request received, pending...");
+                        setStatusAreaColor('rgb(200,180,0)');
+                    }
+                    if (resp == "408") {
+                        // TIMEOUT
+                        setStatusAreaText(request + " request timed out.");
+                        setStatusAreaColor('red');
+                    }
+                    if (resp == "500") {
+                        // INTERNAL SERVER ERROR
+                        setStatusAreaText("Server failure, failed to issue "+request+" request.");
+                        setStatusAreaColor('red');
+                    }
+                    if (resp == "503") {
+                        // SERVICE UNAVAILABLE
+                        setStatusAreaText("Service unavailable, failed to issue "+request+" request.");
+                        setStatusAreaColor('red');
+                    }
+                    return resp;
+                }).catch( (err) => {
+                        setStatusAreaText("Request "+request+" not sent because PC is disconnected.");
+                        setStatusAreaColor("orange");
+                });
+            } catch (err) {
+                console.log("Caught: ", err.message);
+            }
         }
 
 
-        function requestStatus() {
+        function getStatus() {
             // retrieves status from status file for isArmed, remoteEnabled, isAlive, diskSpace and timestamp.
             /* calculates:  
                 PC connected - looks for a return signal and checks time stamp - delay > threshold counts as disconnect)
@@ -1462,11 +1500,9 @@
                 timestamp: new Date().getTime() - 75, // for example, testing with a 75 ms latency
                 diskSpace: 20,
             }
-            
-            // uses fetch request "GET_STATUS"
         }
 
-        function requestTargetInfo() {
+        function mockTargetInfo() {
 
             // Uncomment this (and play with values) to test functionality:
             let i = Math.floor(new Date().getTime() / 200) % 125;
@@ -1478,6 +1514,32 @@
 
             // 
 
+        }
+
+        function updateDataFromInstrument () {
+            let statusString = sendRequest('status');
+            if (statusString) {
+                let status = JSON.parse(statusString);
+                let visible = status.visible;
+                let thermal = status.thermal;
+                let laser = status.laser;
+                var newTracks = {};
+                for (let i = 0; i < visible[0].results.length; i++) {
+                    let trackId = visible[0].results[i].id;
+                    let center = visible[0].results[i].center;
+                    let ts = visible[0].t;
+                    let box = visible[0].results[i].box;
+                    newTracks[trackId] = {
+                        box:[box[0],box[1],box[2],box[3]],
+                        center:[center[0],center[1]],
+                        timestamp:ts,
+                    };
+                }
+                TRACKS = newTracks;
+                TARGET_INFO.temp.hotspot = thermal[0].temp_high;
+                TARGET_INFO.temp.atTemp = laser[0].d < dStabilityThreshold;
+            }
+            return false;
         }
 
     </script>
