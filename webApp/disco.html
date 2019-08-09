@@ -321,7 +321,7 @@
 
         // CONTROL & STATUS
         const SYSTEM_SETTINGS = {
-            timeoutMilSec: 500,
+            timeoutMilSec: 1000,
             heartbeatInterval: 50,
             statusDisplayUpdateInterval: 250,
             cameraUpdateInterval: 100,
@@ -860,9 +860,7 @@
 
         }
         function startTrial() {
-            // call function to send command to start laser
-            // move stuff from initTrialStep into here
-            // include directory setup stuff
+            
         }
         function stopTrialManually(){
             STATUS.isPaused = false;
@@ -1499,7 +1497,6 @@
                 let visible = status.visible[0];
                 let thermal = status.thermal[0];
                 let laser = status.laser[0];
-                let instrument = status.instrument // << Add this to API with controls / disk info
                 var newTracks = {};
                 for (let i = 0; i < visible.results.length; i++) {
                     let trackId = visible.results[i].id;
@@ -1516,12 +1513,11 @@
                 TARGET_INFO.temp.hotspot = thermal.temp_high;
                 TARGET_INFO.temp.atTemp = laser.d < dStabilityThreshold;
 
-                // SEE HERE for API details on instrument
-                STATUS.isArmed = instrument.armed;
-                STATUS.isAlive = instrument.hbm;
-                STATUS.remoteEnabled = instrument.enrem;
+                STATUS.isArmed = laser.armed;
+                STATUS.isAlive = laser.hbm;
+                STATUS.remoteEnabled = laser.enrem;
                 STATUS.timeLastResponded = Math.max(visible.t, thermal.t, laser.t);
-                STATUS.diskSpace = instrument.disk_space;
+                STATUS.diskSpace = 100;// = status.disk_space; // in number of minutes of recording left
                 if(new Date().getTime() - STATUS.timeLastResponded > SYSTEM_SETTINGS.timeoutMilSec) {} else {
                     setIndicator(0, false);
                     STATUS.isConnected = false;
