@@ -1365,32 +1365,31 @@
             try {
                 commandPromise = fetch('http://'+SYSTEM_SETTINGS.ip+':'+SYSTEM_SETTINGS.port+'/commands/'+command, {method:"post", body: payload ? JSON.stringify(payload) : String(new Date().getTime())})
                 .then(function(response) {
-                    let resp = response.json();
-                    if (resp == "200") {
+                    if (response.status == "200") {
                         // OK
                         console.log('Command ',command,' executed successfully.');
                     }
-                    if (resp == "202") {
+                    if (response.status == "202") {
                         // ACCEPTED
                         setStatusAreaText(command + " command received, pending...");
                         setStatusAreaColor('rgb(200,180,0)');
                     }
-                    if (resp == "408") {
+                    if (response.status == "408") {
                         // TIMEOUT
                         setStatusAreaText(command + " command timed out.");
                         setStatusAreaColor('red');
                     }
-                    if (resp == "500") {
+                    if (response.status == "500") {
                         // INTERNAL SERVER ERROR
                         setStatusAreaText("Server failure, failed to issue "+command+" command.");
                         setStatusAreaColor('red');
                     }
-                    if (resp == "503") {
+                    if (response.status == "503") {
                         // SERVICE UNAVAILABLE
                         setStatusAreaText("Service unavailable, failed to issue "+command+" command.");
                         setStatusAreaColor('red');
                     }
-                    return resp;
+                    return response.json();
                 }).catch( (err) => {
                         setStatusAreaText("Command "+command+" not sent because PC is disconnected.");
                         setStatusAreaColor("orange");
@@ -1440,36 +1439,35 @@
 
         function sendRequest(request) {
             // this line specs the command API - http://ip_address:port/commands/SOME_COMMAND
-            var commandPromise = false;
+            var requestPromise = false;
             try {
-                commandPromise = fetch('http://'+SYSTEM_SETTINGS.ip+':'+SYSTEM_SETTINGS.port+'/'+request, {method:"get", body:String(new Date().getTime())})
+                requestPromise = fetch('http://'+SYSTEM_SETTINGS.ip+':'+SYSTEM_SETTINGS.port+'/'+request, {method:"get", body:String(new Date().getTime())})
                 .then(function(response) {
-                    let resp = response.json();
-                    if (resp == "200") {
+                    if (response.status == "200") {
                         // OK
                         console.log('Request ',request,' executed successfully.');
                     }
-                    if (resp == "202") {
+                    if (response.status == "202") {
                         // ACCEPTED
                         setStatusAreaText(request + " request received, pending...");
                         setStatusAreaColor('rgb(200,180,0)');
                     }
-                    if (resp == "408") {
+                    if (response.status == "408") {
                         // TIMEOUT
                         setStatusAreaText(request + " request timed out.");
                         setStatusAreaColor('red');
                     }
-                    if (resp == "500") {
+                    if (response.status == "500") {
                         // INTERNAL SERVER ERROR
                         setStatusAreaText("Server failure, failed to issue "+request+" request.");
                         setStatusAreaColor('red');
                     }
-                    if (resp == "503") {
+                    if (response.status == "503") {
                         // SERVICE UNAVAILABLE
                         setStatusAreaText("Service unavailable, failed to issue "+request+" request.");
                         setStatusAreaColor('red');
                     }
-                    return resp;
+                    return response.json();
                 }).catch( (err) => {
                         setStatusAreaText("Request "+request+" not sent because PC is disconnected.");
                         setStatusAreaColor("orange");
