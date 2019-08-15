@@ -25,61 +25,82 @@
 						
 	<h1>User Manual</h1>
 	
-	
+	<p><br><br></p>
 
-<h2 id="hello-world">Hello world</h2>
-
-<p>Let&rsquo;s create our first content file for your documentation. Open a terminal and add the following command for each new file you want to add. Replace <code>&lt;section-name&gt;</code> with a general term that describes your document in detail.</p>
-
-<pre><code class="language-sh">hugo new &lt;section-name&gt;/filename.md
+<pre><code class="language-sh">hugo new &lt;user-manual&gt;/filename.md
 </code></pre>
 
-<p>Visitors of your website will find the final document under <code>www.example.com/&lt;section-name&gt;/filename/</code>.</p>
+<p>This Document will be eventurally updated to contain all of the Spider Disco project notes and enable troubleshooting and hacking of the system.</p>
 
-<p>Since it&rsquo;s possible to have multiple content files in the same section I recommend to create at least one <code>index.md</code> file per section. This ensures that users will find an index page under <code>www.example.com/&lt;section-name&gt;</code>.</p>
+<ul>
+<li>Goals
 
-<h2 id="homepage">Homepage</h2>
+<ul>
+<li>position / movement</li>
+<li>temperature</li>
+</ul></li>
+<li>Research Findings
 
-<p>To add content to the homepage you need to add a small indicator to the frontmatter of the content file:</p>
+<ul>
+<li>absorption spectra</li>
+<li>power calculations</li>
+<li>spider tolerance</li>
+<li>laser options</li>
+<li>eye safety &amp; regulation</li>
+</ul></li>
+<li>Hardware
 
-<pre><code class="language-toml">type: homepage
-</code></pre>
+<ul>
+<li>system diagram</li>
+<li>laser system</li>
+<li>galvo system</li>
+<li>visible spectrum camera</li>
+<li>infrared spectrum camera</li>
+<li>PC</li>
+<li>enclosure</li>
+<li>RPi</li>
+<li>extensibility</li>
+<li>considered options</li>
+</ul></li>
+<li>Software
 
-<p>Otherwise the theme will not be able to find the corresponding content file.</p>
+<ul>
+<li>system diagram</li>
+<li>drivers</li>
+<li>front end</li>
+<li>tracking</li>
+<li>control</li>
+<li>video</li>
+<li>interface</li>
+<li>considered options</li>
+</ul></li>
+<li>Interface
 
-<h2 id="table-of-contents">Table of contents</h2>
+<ul>
+<li>user flow
 
-<p>You maybe noticed that the menu on the left contains a small table of contents of the current page. All <code>&lt;h2&gt;</code> tags (<code>## Headline</code> in Markdown) will be added automatically.</p>
+<ul>
+<li>each step</li>
+</ul></li>
+<li>getting and using data</li>
+<li>considerations</li>
+</ul></li>
+<li>Troubleshooting
 
-<h2 id="admonitions">Admonitions</h2>
+<ul>
+<li>expected versus unexpected behavior (and failsafe)</li>
+<li>cameras &amp; alignment</li>
+<li>PC issues
 
-<p>Admonition is a handy feature that adds block-styled side content to your documentation, either notes or warnings. It can be enabled by using the corresponding <a href="http://gohugo.io/extras/shortcodes/">shortcodes</a> inside your content:</p>
-
-<pre><code class="language-md">{{&lt; admonition title=&quot;Note&quot; type=&quot;note&quot; &gt;}}
-Something good to know.
-{{&lt; /admonition &gt;}}
-</code></pre>
-
-<p>will be rendered as</p>
-
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p>Lorem ipsum dolor.</p>
-</div>
-
-<p>The <code>type</code> parameter can optionally be used to either display a <code>note</code> or <code>warning</code>. The last type is the default one.</p>
-
-<pre><code class="language-md">{{&lt; admonition title=&quot;Caution&quot; &gt;}}
-Don't try this at home!
-{{&lt; /admonition &gt;}}
-</code></pre>
-
-<p>becomes</p>
-
-<div class="admonition ">
-<p class="first admonition-title">Caution</p>
-<p>Don&rsquo;t try this at home!</p>
-</div>
+<ul>
+<li>running out of memory</li>
+<li>something pauses</li>
+<li>avoiding linux updates</li>
+</ul></li>
+<li>laser issues</li>
+<li>steering issues</li>
+</ul></li>
+</ul>
 
 
 

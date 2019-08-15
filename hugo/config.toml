@@ -1,9 +1,9 @@
-baseurl = "/"
+baseurl = "mikewillems.github.io/spider-disco/"
 languageCode = "en-us"
 metadataformat = "yaml"
 title = "Spider Docs"
 theme = "hugo-alabaster-theme"
-pushDir = "docs"
+pushDir = "../docs"
 
 [params]
 	name = "Spider Docs"
