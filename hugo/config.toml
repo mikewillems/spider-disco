@@ -1,0 +1,35 @@
+baseurl = "mikewillems.github.io/spider-disco/"
+languageCode = "en-us"
+metadataformat = "yaml"
+title = "Spider Docs"
+theme = "hugo-alabaster-theme"
+pushDir = "docs"
+
+[params]
+	name = "Spider Docs"
+	description = "Documentation for the UC Berkeley Spider Sex Laser."
+
+	github_user   = "mikewillems"
+	github_repo   = "spider-disco"
+	github_banner = true
+
+	custom_css = []
+	custom_js  = []
+
+	highlightjs = "css/highlight.css"
+	favicon = "disco.ico"
+
+[params.sidebar]
+	logo = "favicon.ico"
+
+
+	github_button  = true
+	travis_button  = false
+	codecov_button = false
+	gratipay = ""
+
+	show_relations = true
+
+[params.footer]
+	copyright = false
+	show_powered_by = false
