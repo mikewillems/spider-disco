@@ -1,0 +1,318 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head lang="en-us">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+	<meta name="description" content="Documentation for the UC Berkeley Spider Sex Laser.">
+	<meta name="generator" content="Hugo 0.57.0" />
+	
+	<title>Quick Reference &mdash; Spider Docs</title>
+	
+	<link rel="stylesheet" href="mikewillems.github.io/spider-disco/css/alabaster.css" type="text/css" />
+	<link rel="stylesheet" href="mikewillems.github.io/spider-disco/css/highlight.css" type="text/css" />
+
+	
+
+	<link rel="shortcut icon" href="mikewillems.github.io/spider-disco/disco.ico" type="image/x-icon"/>
+</head>
+
+	<body role="document">
+		<div class="document">
+			<div class="documentwrapper">
+				<div class="bodywrapper">
+					<div class="body" role="main">
+						
+	<h1>Quick Reference</h1>
+	
+	
+
+<p><br>
+<br>
+<br>
+The <a href="https://github.com/mikewillems/spider-disco">Jumping Spider Disco Floor</a> is a system that creates a temperature differential between spiders during experiments observing their mating habits.</p>
+
+<h1 id="features">Features</h1>
+
+<ul>
+<li><strong>Position Tracking</strong> - Automatically record movements of spiders and other small subjects.</li>
+<li><strong>Temperature Monitoring</strong> - Record relative temperatures of test subjects.</li>
+<li><strong>Selective Heating</strong> - Heat one spider up by a specified differential.</li>
+<li><strong>Thermal and Visible Video Recording</strong> - Review spider movements for context.</li>
+<li><strong>Adjustable Detection Parameters</strong> - Tune the instrument for use with other subjects and in different conditions.</li>
+<li><strong>Hardware and Software Lockouts</strong> - Prevent unauthorized or unwitting operation.</li>
+<li><strong>System Freeze Protection</strong> - Any freeze will turn off the laser.</li>
+</ul>
+
+<h1 id="specifications">Specifications</h1>
+
+<ul>
+<li><p><strong>Target Size Range</strong>: 2-4mm abdomen diameter<br>
+Detects dark areas, 20-90 visible camera pixels by default and can be changed in the <em>config.json</em> file. This translates to spider abdomens 2mm - 4mm in diameter.</p></li>
+
+<li><p><strong>Object Tracking Speed</strong>: 0.5-1m/s<br>
+Visual tracking is processed at roughly 200fps, and objects can be tracked with high fidelity at 0.5m/s and up to 1m/s at the fixed target distance of 55cm.</p></li>
+
+<li><p><strong>Power Output</strong>: 250mW<br>
+Peak optical power output is roughly 200 mW within a 1 cm<sup>2</sup> center spot. For comparison, midday sun has an optical power of ~100mW per cm<sup>2</sup>.</p></li>
+
+<li><p><strong>Thermal Resolution</strong>: 50mK<br>
+The instrument&rsquo;s specs are limited by those of the FLIR Boson core. Thermal sensitivity (minimum detectable temperature difference) is very fine at ~50mK.</p></li>
+
+<li><p><strong>Thermal Accuracy</strong>: ~20%<br>
+The FLIR sensor output has only somewhat linear correlation to temperature and undergoes significant drift over time. If properly calibrated using a hot plate, a given trial can have a finer thermal accuracy. Please reference the <a href="/user-manual">User Manual</a>.</p></li>
+
+<li><p><strong>Video Resolution</strong>: 400 x 300<br>
+This instrument uses a Basler ACE visible light camera for target tracking. Thermal camera resolution is 320 x 256.</p></li>
+
+<li><p><strong>Arena Size / Field of View</strong>: 10cm / 16&deg;<br>
+The instrument is made to house circular mating arenas up to 20cm in diameter, but the current thermal camera lens limits FoV to roughly 10cm / 16&deg;. Replacement thermal core lenses can be obtained from FLIR, and the visible camera uses a standard C-Mount lens.</p></li>
+
+<li><p><strong>Instrument Dimensions</strong>: 65cm x 22cm x 22cm<br>
+While the laser unit is removable for secure transport, while the frame should be left assembled for best results.</p></li>
+</ul>
+
+<h1 id="preparing-for-testing">Preparing for Testing</h1>
+
+<h4 id="what-s-in-the-box"><strong>What&rsquo;s in the &ldquo;Box&rdquo;</strong></h4>
+
+<p>The Spider Disco system includes the following components:</p>
+
+<ol>
+<li>Laser System
+
+<ol>
+<li>Laser unit &amp; enclosure</li>
+<li>Mounting bolt</li>
+<li>Keys for arming laser system (x2)</li>
+<li>Keys for enabling remote use (x2)</li>
+<li>Protective case</li>
+</ol></li>
+<li>Test Enclosure (pre-assembled)
+
+<ol>
+<li>Mechanical Rig</li>
+<li>Visible Camera &amp; Mount</li>
+<li>Thermal Camera &amp; Mount</li>
+<li>Light Source</li>
+</ol></li>
+<li>Laser System PSU</li>
+<li>Instrument Control PC</li>
+<li>Cables
+
+<ol>
+<li>PC power cable for PSU</li>
+<li>Laser unit power cable</li>
+<li>USB 3.0 cable for Basler camera</li>
+<li>USB 3.0 cable for FLIR camera</li>
+<li>micro USB 2.0 cable for light</li>
+<li>CAT5 Ethernet cable</li>
+<li>Laptop charging cable / PSU</li>
+</ol></li>
+<li>Safety Equipment
+
+<ol>
+<li>Broad spectrum IR-blocking glasses (x2)</li>
+</ol></li>
+</ol>
+
+<h4 id="system-assembly"><strong>System Assembly</strong></h4>
+
+<p>To assemble your Spider Disco, first check for the presence of all components listed above. After verifying that all are present, proceed through the following steps:</p>
+
+<ol>
+<li><p>Attach the laser unit via the steel mounting disc on its underside and the <sup>1</sup>&frasl;<sub>4</sub>&rdquo; hand screw in the black bar on top of of the laser unit. Tighten screw firmly, ensuring that the body of the laser unit extends inward toward the center of the mechanical rig with its screen pointing away from the cameras.</p></li>
+
+<li><p>Use the PC power cable to plug in the Laser System PSU to wall power.</p></li>
+
+<li><p>Attach the Laser System PSU to the Laser System using its 15&rsquo; power cable. Both sides use the same aircraft screw connectors, and the cable is reversible. Twist the screw connectors to secure them, preventing accidental disconnection and unnecessary stress on the cable internals.</p></li>
+
+<li><p>Attach the light to one of the USB ports on the Laser Unit using a micro USB cable.</p></li>
+
+<li><p>Place the Instrument Control PC in sight of the arena, connecting it to wall power if necessary.</p></li>
+
+<li><p>Connect the Instrument Control PC and the Laser Unit using an Ethernet cable.</p></li>
+
+<li><p>Attach both external cameras to the Instrument Control PC using the included USB 3.0 cables.</p></li>
+
+<li><p>Place the arena to be used on the base of the mechanical rig.</p></li>
+</ol>
+
+<h4 id="pre-trial-considerations"><strong>Pre-trial Considerations</strong></h4>
+
+<ul>
+<li><p><strong>Access</strong>
+Conduct trials only in closed rooms where you can prevent entry of unwitting or unauthorized bystanders.</p></li>
+
+<li><p><strong>Lighting</strong>
+Visual tracking works best in indoor areas with consistent lighting.</p></li>
+
+<li><p><strong>Surface</strong>
+The system should be operated only on non-reflective background surfaces.</p></li>
+
+<li><p><strong>Tools</strong>
+Any tools used to adjust the spiders should be non-reflective.</p></li>
+
+<li><p><strong>Calibration</strong>
+If fine absolute temperature calibration is desired, a controllable hot plate should be available that can be put at the edge of the thermal camera&rsquo;s field of view.</p></li>
+</ul>
+
+<h4 id="turning-on-the-system"><strong>Turning on the System</strong></h4>
+
+<ol>
+<li>Turn on the Laser System PSU using the switch on its AC jack.</li>
+<li>Turn on the Laser Unit using the black rocker switch on its side.</li>
+<li>Turn on the Instrument Control PC by opening its lid and pressing the power button at the top right of its keyboard.<br><br></li>
+</ol>
+
+<h4 id="starting-the-program"><strong>Starting the Program</strong></h4>
+
+<ol>
+<li>On the Instrument Control PC, open a terminal (this can be done by pressing <code>Ctrl</code>, <code>Alt</code>, and <code>T</code> simultaneously).</li>
+<li>Navigate within the terminal to the install directory using <code>CD</code>.</li>
+<li>From the install directory, type <code>python run.py</code>.</li>
+</ol>
+
+<h1 id="experimental-workflow">Experimental Workflow</h1>
+
+<p>After powering on the system, it is designed to walk you through the process of using it. The steps are as follows.</p>
+
+<h4 id="1-trial-setup"><strong>1. Trial Setup</strong></h4>
+
+<p>After selecting <code>New Trial</code>, the Trial Setup step allows you to choose or set parameters for your trial:</p>
+
+<ul>
+<li>duration</li>
+<li>desired temperature differential</li>
+<li>max laser power</li>
+</ul>
+
+<h4 id="2-calibration"><strong>2. Calibration</strong></h4>
+
+<p>The calibration step is not currently used and will be removed subsequently in the posted app.</p>
+
+<h4 id="3-safety-checks"><strong>3. Safety Checks</strong></h4>
+
+<p>If the laser is set to off for the trial, no safety checks are necessary. Otherwise, the system will prompt you to ensure that:</p>
+
+<ul>
+<li>all users understand the risk</li>
+<li>all users are wearing eye protection</li>
+<li>proper area access control is in place</li>
+<li>the instrument is sitting on a non-reflective surface</li>
+<li>any tools used are non-reflective</li>
+</ul>
+
+<h4 id="4-specimen-loading"><strong>4. Specimen Loading</strong></h4>
+
+<p>Once safety checks are complete, the user must load the specimens into the arena.</p>
+
+<p>Specimens are conceptually distinguished as heated vs. unheated targets, and the user must select the appropriate detected object as each target. This is done by clicking the heading at the right then clicking the detected object (the spider). The user can then press the <code>Swap Targets</code> command if necessary to ensure that the proper target is selected for heating.</p>
+
+<h4 id="5-running-the-trial"><strong>5. Running the Trial</strong></h4>
+
+<p>During the trial, the system will update the positions of both spiders, as well as the temperature differential. In the event that a spider is temporarily not tracked (for example if they hop on the side of the arena or if they move while the trial is paused), then it will no longer be selected as a target once tracking resumes to recognize it. In this case, the information under that heading will be replaced with dashes <code>--</code>, and the user can simply tap the heading then tap a target on the screen to select it. This workflow requires a bit more user involvement but ensures that the wrong target is not heated by accident. The user continues to be able to use the <code>Swap Targets</code> command if necessary.</p>
+
+<h4 id="6-transferring-data"><strong>6. Transferring Data</strong></h4>
+
+<p>All video, temperature, and position tracking data is saved to a single directory for each trial, named according to the trial&rsquo;s start date and time. The data can be transferred (or processed on the Instrument Control PC) from the trial folder, which is specified on the app home screen.
+<br><br></p>
+
+<h1 id="additional-safety-information">Additional Safety Information</h1>
+
+<h4 id="laser-classification"><strong>Laser Classification</strong></h4>
+
+<p>At a total laser power of ~500mW and a transmitted optical power of ~250mW, this instrument&rsquo;s laser has a <a href="https://www.lasersafetyfacts.com/3B/">3B classification</a>. It is harmful to eye exposure and, since it is divergent and not focused, poses no burn risk to skin without additional optical system elements. The largest potential danger, therefore, arises from incidental focusing by additional reflective objects entering the laser&rsquo;s path.</p>
+
+<h4 id="eye-protection"><strong>Eye Protection</strong></h4>
+
+<p>The included eye protection was selected for its broad spectrum of protection, which includes ultraviolet wavelengths below 390nm and infrared above 800nm. At the system wavelength of 810nm, optical power reduction was measured at 99.0%, bringing optical power well within safe limits. Nevertheless, better eye protection is readily available for these wavelengths from Honeywell which blocks more of the infrared radiation while allowing less obstructed eyesight, and we recommend contacting Honeywell for additional information.</p>
+
+<h4 id="rig-modifications"><strong>Rig Modifications</strong></h4>
+
+<p>As the mechanical rig is made of 6061 Aluminum, it is recommended to cover its posts with a non-reflective material, for example a black vinyl sticker (provided). Additionally, there are mounting options for adding hardware to the rig, and the safety shields may be replaced or augmented as desired with larger ones that provide better coverage. Their primary design consideration is preventing users from accidentally moving their heads into the path of the laser at a close distance (where the beam has not diverged as much yet and intensity is higher).</p>
+
+<h4 id="disclaimer"><strong>Disclaimer</strong></h4>
+
+<ol>
+<li><p><strong>Misuse</strong>
+Any use of this system outside of the designed procedure laid out in this document is at the user&rsquo;s sole risk and responsibility. Every effort has been made to integrate the necessary safety practices into the system and enforce their use by design. Within the designed parameters and using the required eye protection, this system poses an acceptable safety risk to users. Any use beyond these conditions must be carefully evaluated for its impact on safety.</p></li>
+
+<li><p><strong>Failsafe Design</strong>
+This system is designed such that a failure of most subsystems results in the laser being turned off. This has the implication that many things can render the laser inoperable. If the laser is not operating, the use or status of any software submodule could be the source of the problem, so please refer to the <a href="/user-manual#troubleshooting">User Manual</a> for troubleshooting procedures.
+<div class="admonition ">
+<p class="first admonition-title">Caution</p>
+<p>The exception to this design parameter is the galvo subsystem (the laser steering system), which has the ability to fail &ldquo;silently&rdquo; without shutting down the laser. While the galvo subsystem is designed to point the beam directly downward into the center of the arena in the event of a failure, this is the one situation to look out for from a safety perspective. If heating is being used and all signals indicate that the laser is on, but the target isn&rsquo;t heating up after 30-60 seconds, please use another thermal camera (such as the FLIR E-60) or a cell phone camera to ensure that the infrared beam is being directed into the arena.</p>
+</div></p></li>
+
+<li><p><strong>Not Regulated</strong>
+This instrument is not approved or regulated by CE, ROHS, UL, or any other regulating body.</p></li>
+</ol>
+
+<h1 id="support">Support</h1>
+
+<p>In the event of a system malfunction, please feel free to email Michael Willems for assistance. He will return your email at his earliest convenience.</p>
+
+
+
+						
+					</div>
+				</div>
+			</div>
+			
+			<div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+	<div class="sphinxsidebarwrapper">
+		<p class="logo">
+			<a href="mikewillems.github.io/spider-disco/">
+				<img class="logo" src="mikewillems.github.io/spider-disco/favicon.ico" alt="Logo"/>
+				<h1 class="logo logo-name">Spider Docs</h1>
+			</a>
+		</p>
+		
+		<p class="blurb">Documentation for the UC Berkeley Spider Sex Laser.</p>
+
+		
+
+	<p>
+		<iframe src="https://ghbtns.com/github-btn.html?user=mikewillems&repo=spider-disco&type=watch&count=true&size=large"
+		allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+	</p>
+
+	
+
+	
+		
+
+<h3>Navigation</h3>
+<ul>
+	
+	<li class="toctree-l1">
+		<a class="reference internal" href="mikewillems.github.io/spider-disco/quick-reference/">Quick Reference</a>
+	</li>
+	
+	<li class="toctree-l1">
+		<a class="reference internal" href="mikewillems.github.io/spider-disco/user-manual/">User Manual</a>
+	</li>
+	
+	<li class="toctree-l1">
+		<a class="reference internal" href="mikewillems.github.io/spider-disco/">Foreword</a>
+	</li>
+	
+</ul>
+
+
+	</div>
+</div>
+<div class="clearer"></div>
+</div>
+
+			
+
+			<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.3.0/highlight.min.js"></script>
+			<script>hljs.initHighlightingOnLoad();</script>
+			
+
+			
+		</div>
+	</body>
+</html>
